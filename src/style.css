@@ -1,0 +1,46 @@
+/* Os "tokens" deste projeto. Mesma ideia do design system: nenhum valor solto
+   nos componentes, tudo sai daqui. */
+:root {
+  /* texto escuro: fica para quem está SOBRE as cores claras (os botões lilás) */
+  --cor-texto: #1f2937;
+  /* texto claro: o da tela escura */
+  --cor-texto-tela: #e6e4ee;
+  --cor-texto-suave: #a9a5b8;
+  /* fundo escuro, sem ser preto puro */
+  --cor-fundo: #1b1a22;
+  --cor-fundo-afundado: #26242f;
+  --cor-borda: #3a3746;
+  --cor-primaria: #B89CFF;
+  --cor-secundaria: #F6D365;
+  --cor-disabled: #D9CCF7;
+  --raio: 4px;
+  --fonte-ui: Inter, system-ui, 'Segoe UI', Roboto, Arial, sans-serif;
+  --fonte-mono: ui-monospace, Consolas, monospace;
+}
+
+body {
+  margin: 0;
+  padding: 32px;
+  font-family: var(--fonte-ui);
+  color: var(--cor-texto-tela);
+  background: var(--cor-fundo);
+}
+
+/* campo de texto no mesmo roxinho escuro dos cartões */
+input {
+  padding: 8px 12px;
+  font: inherit;
+  color: var(--cor-texto-tela);
+  background: var(--cor-fundo-afundado);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+}
+
+input::placeholder {
+  color: var(--cor-texto-suave);
+}
+
+input:focus {
+  outline: 2px solid var(--cor-primaria);
+  outline-offset: 1px;
+}
