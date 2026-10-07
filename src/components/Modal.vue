@@ -11,7 +11,9 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
-    min-width: 320px;
+    /* 320px, mas nunca mais largo que a tela (16px de folga de cada lado) */
+    width: min(320px, 100vw - 32px);
+    box-sizing: border-box;
     padding: 24px;
     background: var(--cor-fundo-afundado);
     border: 1px solid var(--cor-borda);

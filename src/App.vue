@@ -127,6 +127,13 @@ watch(
   gap: 10px;
 }
 
+/* o campo estica e ocupa o espaço que sobra do botão */
+.adotar input {
+  flex: 1;
+  min-width: 0;
+  max-width: 320px;
+}
+
 .adotar button {
   padding: 8px 16px;
   background: var(--cor-primaria);

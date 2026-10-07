@@ -76,6 +76,7 @@ function excluir() {
 
   }
 
+
   .tamagochi button {
     padding: 16px 32px;
     background: var(--cor-primaria);
@@ -121,6 +122,25 @@ function excluir() {
   
   .tamagochi .excluir:disabled {
   background: #c62828;
+  }
+
+  /* no celular não cabe tudo numa linha: os dados ficam em cima e os botões
+     embaixo, dividindo a largura. Fica no fim do bloco: com a mesma
+     especificidade, a regra que vem depois ganha */
+  @media (max-width: 600px) {
+    .tamagochi {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .tamagochi div {
+      gap: 8px;
+    }
+
+    .tamagochi button {
+      flex: 1;
+      padding: 12px 8px;
+    }
   }
 
 </style>

@@ -1,5 +1,3 @@
-/* Os "tokens" deste projeto. Mesma ideia do design system: nenhum valor solto
-   nos componentes, tudo sai daqui. */
 :root {
   /* texto escuro: fica para quem está SOBRE as cores claras (os botões lilás) */
   --cor-texto: #1f2937;
@@ -10,9 +8,9 @@
   --cor-fundo: #1b1a22;
   --cor-fundo-afundado: #26242f;
   --cor-borda: #3a3746;
-  --cor-primaria: #B89CFF;
-  --cor-secundaria: #F6D365;
-  --cor-disabled: #D9CCF7;
+  --cor-primaria: #b89cff;
+  --cor-secundaria: #f6d365;
+  --cor-disabled: #d9ccf7;
   --raio: 4px;
   --fonte-ui: Inter, system-ui, 'Segoe UI', Roboto, Arial, sans-serif;
   --fonte-mono: ui-monospace, Consolas, monospace;
@@ -26,7 +24,12 @@ body {
   background: var(--cor-fundo);
 }
 
-/* campo de texto no mesmo roxinho escuro dos cartões */
+@media (max-width: 600px) {
+  body {
+    padding: 16px;
+  }
+}
+
 input {
   padding: 8px 12px;
   font: inherit;
