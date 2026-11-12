@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { PhMoon, PhSun } from '@phosphor-icons/vue'
+import IconePixel from './IconePixel.vue'
 
 type Tema = 'light' | 'dark'
 
@@ -19,36 +19,11 @@ function trocar() {
 <template>
   <!-- o ícone mostra pra onde o botão leva: no escuro aparece o sol -->
   <button
-    class="botao-tema"
+    class="button so-icone"
     type="button"
     :aria-label="tema === 'dark' ? 'Mudar para o tema claro' : 'Mudar para o tema escuro'"
     @click="trocar"
   >
-    <PhSun v-if="tema === 'dark'" weight="duotone" :size="22" aria-hidden="true" />
-    <PhMoon v-else weight="duotone" :size="22" aria-hidden="true" />
+    <IconePixel :nome="tema === 'dark' ? 'sol' : 'lua'" />
   </button>
 </template>
-
-<style scoped>
-.botao-tema {
-  display: grid;
-  place-items: center;
-  width: 2.6875rem;
-  height: 2.6875rem;
-  padding: 0;
-  color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-}
-
-.botao-tema:hover {
-  background: var(--surface-strong);
-}
-
-.botao-tema:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-}
-</style>

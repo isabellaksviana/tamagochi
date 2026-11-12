@@ -1,17 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import {
-  PhArrowLeft,
-  PhBackpack,
-  PhBowlFood,
-  PhCookie,
-  PhDrop,
-  PhHandWaving,
-  PhMoon,
-  PhYarn,
-} from '@phosphor-icons/vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import DesenhoBicho from './DesenhoBicho.vue'
 import BotaoTema from './BotaoTema.vue'
+import IconePixel from './IconePixel.vue'
 import { BARRAS } from '../barras'
 import { expressaoDo, LIMITE_BAIXO, MINIMO } from '../regras'
 import type { Bicho } from '../tipos'
@@ -33,66 +24,79 @@ const emit = defineEmits<{
   abriuMochila: []
 }>()
 
-
 // a regra da carinha mora em regras.ts, porque a lista usa a mesma
 const expressao = computed(() => expressaoDo(props.bicho.status))
 
-// o bichinho não mexe nos status: só avisa o que aconteceu
-function alimentar() {
-  emit('comeu')
+// cada barra vira 10 bloquinhos: quantos estão acesos
+function blocosAcesos(valor: number) {
+  return Math.round(valor / 10)
 }
 
-function brincar() {
-  emit('brincou')
-}
+// a bateria do visor mostra a energia do bicho (3 risquinhos)
+const risquinhosDaBateria = computed(() => Math.ceil(props.bicho.status.energia / 34))
 
-function excluir() {
-  emit('soltou')
-}
+// a hora de verdade no canto do visor, como no aparelhinho
+const agora = ref(new Date())
+const hora = computed(() =>
+  agora.value.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+)
+let relogio = 0
+onMounted(() => {
+  relogio = setInterval(() => {
+    agora.value = new Date()
+  }, 10_000)
+})
+onUnmounted(() => {
+  clearInterval(relogio)
+})
 </script>
 
 <template>
   <section class="tela">
     <header class="topo">
-      <div class="esquerda">
-        <button class="button so-icone" type="button" aria-label="Voltar para os meus bichinhos" @click="emit('voltou')">
-          <PhArrowLeft weight="duotone" aria-hidden="true" />
-        </button>
-      </div>
+      <button class="button so-icone" type="button" aria-label="Voltar para os meus bichinhos" @click="emit('voltou')">
+        <IconePixel nome="seta" />
+      </button>
       <div class="direita">
         <!-- os biscoitos são a porta da loja (como a moeda nos jogos) -->
         <button
-          class="button"
+          class="button biscoitos"
           type="button"
           :aria-label="`${biscoitos} biscoitos. Abrir a Lojinha`"
           title="Lojinha"
           @click="emit('abriuLoja')"
         >
-          <PhCookie weight="duotone" aria-hidden="true" class="icone-biscoito" />
-          {{ biscoitos }}
+          <IconePixel nome="biscoito" />
+          <span class="numero">{{ biscoitos }}</span>
         </button>
         <button
-          class="button"
+          class="button so-icone com-contador"
           type="button"
           :aria-label="`Mochila, ${itensNaMochila} ${itensNaMochila === 1 ? 'item' : 'itens'}`"
+          title="Mochila"
           @click="emit('abriuMochila')"
         >
-          <PhBackpack weight="duotone" aria-hidden="true" />
-          <span class="rotulo-botao">Mochila</span>
-          <span v-if="itensNaMochila > 0" class="quantidade">{{ itensNaMochila }}</span>
+          <IconePixel nome="mochila" />
+          <span v-if="itensNaMochila > 0" class="contador numero">{{ itensNaMochila }}</span>
         </button>
         <BotaoTema />
         <!-- soltar não é cuidado: fica longe dos botões de cuidar, pra não clicar sem querer -->
-        <button class="button so-icone" type="button" :aria-label="`Soltar ${bicho.nome}`" title="Soltar" @click="excluir">
-          <PhHandWaving weight="duotone" aria-hidden="true" />
+        <button class="button so-icone" type="button" :aria-label="`Soltar ${bicho.nome}`" title="Soltar" @click="emit('soltou')">
+          <IconePixel nome="porta" />
         </button>
       </div>
     </header>
 
     <h1 class="nome">{{ bicho.nome }}</h1>
 
-    <div class="palco">
+    <!-- a telinha de LCD: pontinhos, bateria (a energia) e a hora, como no aparelhinho -->
+    <div class="visor">
+      <span class="bateria" :aria-label="`Energia: ${risquinhosDaBateria} de 3`">
+        <i v-for="n in 3" :key="n" :class="{ acesa: n <= risquinhosDaBateria }" />
+      </span>
+      <span class="hora numero">{{ hora }}</span>
       <DesenhoBicho class="desenho" :especie="bicho.especie" :cor="bicho.cor" :expressao="expressao" />
+      <span class="chao" />
     </div>
 
     <ul class="barras">
@@ -103,37 +107,37 @@ function excluir() {
         :style="{ '--cor': barra.cor }"
       >
         <span class="rotulo">
-          <component :is="barra.icone" weight="duotone" :size="20" />
+          <IconePixel :nome="barra.icone" />
           {{ barra.rotulo }}
         </span>
         <div
-          class="trilho"
+          class="blocos"
           role="meter"
           :aria-label="barra.rotulo"
           aria-valuemin="0"
           aria-valuemax="100"
-          :aria-valuenow="bicho.status[barra.chave]"
+          :aria-valuenow="Math.round(bicho.status[barra.chave])"
         >
-          <div class="preenchido" :style="{ width: `${bicho.status[barra.chave]}%` }" />
+          <i v-for="n in 10" :key="n" :class="{ aceso: n <= blocosAcesos(bicho.status[barra.chave]) }" />
         </div>
       </li>
     </ul>
 
     <div class="acoes">
-      <button class="acao" type="button" @click="alimentar" :disabled="bicho.status.fome === 100">
-        <span class="circulo"><PhBowlFood weight="duotone" :size="30" aria-hidden="true" /></span>
+      <button class="acao" type="button" @click="emit('comeu')" :disabled="bicho.status.fome === 100">
+        <span class="circulo"><IconePixel nome="tigela" :escala="3" /></span>
         Alimentar
       </button>
       <button class="acao" type="button" @click="emit('seLambeu')" :disabled="bicho.status.higiene === 100">
-        <span class="circulo"><PhDrop weight="duotone" :size="30" aria-hidden="true" /></span>
+        <span class="circulo"><IconePixel nome="gota" :escala="3" /></span>
         Se lamber
       </button>
-      <button class="acao" type="button" @click="brincar" :disabled="bicho.status.energia <= MINIMO">
-        <span class="circulo"><PhYarn weight="duotone" :size="30" aria-hidden="true" /></span>
+      <button class="acao" type="button" @click="emit('brincou')" :disabled="bicho.status.energia <= MINIMO">
+        <span class="circulo"><IconePixel nome="novelo" :escala="3" /></span>
         Brincar
       </button>
       <button class="acao" type="button" @click="emit('dormiu')" :disabled="bicho.status.energia === 100">
-        <span class="circulo"><PhMoon weight="duotone" :size="30" aria-hidden="true" /></span>
+        <span class="circulo"><IconePixel nome="lua" :escala="3" /></span>
         Dormir
       </button>
     </div>
@@ -155,89 +159,175 @@ function excluir() {
   align-items: center;
 }
 
-.esquerda,
 .direita {
   display: flex;
   align-items: center;
   gap: var(--space-2);
 }
 
-.icone-biscoito {
-  color: #d9a15b;
+.biscoitos {
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-base);
+}
+
+/* o numerozinho de itens em cima do botão da mochila */
+.com-contador {
+  position: relative;
+}
+
+.contador {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  display: grid;
+  place-items: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.3rem;
+  font-size: var(--font-size-xs);
+  color: var(--on-primary);
+  background: var(--primary);
+  border-radius: 999px;
 }
 
 .nome {
   margin: 0;
   text-align: center;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
+  line-height: 1.2;
 }
 
-/* o círculo de luz atrás do bicho */
-.palco {
+/* ============ o visor de LCD ============ */
+.visor {
+  position: relative;
   display: grid;
-  place-items: center;
-  width: min(300px, 80vw);
-  aspect-ratio: 1;
-  margin: 0 auto;
-  background: radial-gradient(closest-side, var(--primary-soft) 0 92%, transparent 93%);
+  place-items: end center;
+  height: 15rem;
+  padding-bottom: var(--space-4);
+  overflow: hidden;
+  background-color: var(--lcd);
+  /* os pontinhos da telinha */
+  background-image: radial-gradient(var(--lcd-ponto) 1px, transparent 1.5px);
+  background-size: 4px 4px;
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  /* a moldura de dentro, como a borda do visor de um aparelho */
+  box-shadow:
+    inset 0 0 0 4px var(--surface),
+    inset 0 0 0 6px var(--border);
 }
 
+/* o gato em múltiplo inteiro do desenho (45 de largura): 4× no computador, 3× no celular */
 .desenho {
-  width: min(240px, 70vw);
+  position: relative;
+  width: 180px;
 }
 
+.chao {
+  position: absolute;
+  left: 1.5rem;
+  right: 1.5rem;
+  bottom: var(--space-4);
+  height: 4px;
+  background: var(--border);
+}
+
+.bateria,
+.hora {
+  position: absolute;
+  top: 0.9rem;
+  color: var(--text-muted);
+}
+
+.bateria {
+  left: 1rem;
+  display: flex;
+  gap: 2px;
+  width: 1.75rem;
+  height: 0.875rem;
+  padding: 2px;
+  border: 2px solid currentColor;
+}
+
+/* o "biquinho" da bateria */
+.bateria::after {
+  content: '';
+  position: absolute;
+  right: -6px;
+  top: 2px;
+  width: 3px;
+  height: 4px;
+  background: currentColor;
+}
+
+.bateria i {
+  flex: 1;
+}
+
+.bateria i.acesa {
+  background: currentColor;
+}
+
+.hora {
+  right: 1rem;
+  font-size: var(--font-size-sm);
+  line-height: 1;
+}
+
+/* ============ barras de bloquinhos ============ */
 .barras {
   display: grid;
   gap: 10px;
   margin: 0;
-  padding: 0;
+  padding: var(--space-4);
   list-style: none;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 16px;
 }
 
 .barras li {
   display: grid;
-  grid-template-columns: 120px 1fr;
+  grid-template-columns: 7.5rem 1fr;
   align-items: center;
   gap: 10px;
   font-weight: 600;
+  font-size: var(--font-size-sm);
 }
 
 .rotulo {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
-/* o ícone usa a cor da barra (o Phosphor pinta com a cor do texto) */
-.rotulo svg {
-  color: var(--cor);
+.blocos {
+  display: flex;
+  gap: 3px;
 }
 
-.trilho {
+.blocos i {
+  flex: 1;
   height: 12px;
-  overflow: hidden;
   background: var(--surface-strong);
-  border-radius: 999px;
 }
 
-.preenchido {
-  height: 100%;
+.blocos i.aceso {
   background: var(--cor);
-  border-radius: inherit;
-  transition: width 0.3s;
 }
 
-/* status baixo: barra e ícone ficam vermelhos (o !important vence a cor que vem no style) */
+/* status baixo: os blocos ficam vermelhos (o !important vence a cor que vem no style) */
 .baixa {
   --cor: var(--danger-text) !important;
 }
 
+/* ============ ações ============ */
 .acoes {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
 }
 
-/* botões redondos do jogo, com a legenda embaixo (não são o Button do DS, de propósito) */
+/* botões redondos do jogo, com a legenda embaixo */
 .acao {
   display: grid;
   justify-items: center;
@@ -245,7 +335,7 @@ function excluir() {
   padding: var(--space-1);
   font: inherit;
   font-weight: 600;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   color: var(--text-muted);
   background: none;
   border: none;
@@ -256,15 +346,20 @@ function excluir() {
 .circulo {
   display: grid;
   place-items: center;
-  width: 3.875rem;
-  height: 3.875rem;
-  color: var(--on-primary);
-  background: var(--primary);
+  width: 3.75rem;
+  height: 3.75rem;
+  background: var(--surface);
+  border: 2px solid var(--border);
   border-radius: 50%;
 }
 
 .acao:hover:not(:disabled) .circulo {
-  filter: brightness(1.08);
+  background: var(--surface-strong);
+  border-color: var(--primary);
+}
+
+.acao:active:not(:disabled) .circulo {
+  transform: translateY(2px);
 }
 
 .acao:focus-visible {
@@ -277,28 +372,13 @@ function excluir() {
   opacity: 45%;
 }
 
-/* o numerozinho de itens na mochila */
-.quantidade {
-  display: grid;
-  place-items: center;
-  min-width: 1.25rem;
-  height: 1.25rem;
-  padding: 0 0.3rem;
-  font-size: var(--font-size-xs);
-  font-weight: 700;
-  color: var(--on-primary);
-  background: var(--primary);
-  border-radius: 999px;
-}
-
-/* celular: Loja e Mochila ficam só com o ícone (o nome continua no aria-label) */
 @media (max-width: 480px) {
-  .rotulo-botao {
-    display: none;
+  .desenho {
+    width: 135px;
   }
 
-  .direita .button:not(.so-icone) {
-    padding: 0 var(--space-3);
+  .visor {
+    height: 12rem;
   }
 }
 

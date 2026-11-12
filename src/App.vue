@@ -261,7 +261,7 @@ watch(
     <!-- a mesma Janela da loja e da mochila, na versão pequena -->
     <Janela v-if="bichoSoltando !== null" :titulo="`Soltar ${bichoSoltando.nome}?`" pequena @fechou="cancelar">
       <template #icone>
-        <DesenhoBicho :especie="bichoSoltando.especie" :cor="bichoSoltando.cor" expressao="triste" />
+        <DesenhoBicho :especie="bichoSoltando.especie" :cor="bichoSoltando.cor" expressao="triste" so-cabeca />
       </template>
 
       <p class="aviso-soltar">Essa ação não pode ser desfeita.</p>

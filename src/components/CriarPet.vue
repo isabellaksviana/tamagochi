@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { PhArrowLeft, PhCat, PhHeart } from '@phosphor-icons/vue'
 import DesenhoBicho from './DesenhoBicho.vue'
 import BotaoTema from './BotaoTema.vue'
+import IconePixel from './IconePixel.vue'
 import type { CorGato, Especie } from './bicho/cores'
 
 // sem nenhum bicho ainda, não tem pra onde voltar: o botão some
@@ -50,7 +50,7 @@ function adotar() {
           aria-label="Voltar para os meus bichinhos"
           @click="emit('voltou')"
         >
-          <PhArrowLeft weight="duotone" aria-hidden="true" />
+          <IconePixel nome="seta" />
         </button>
         <h1>Novo bichinho</h1>
       </div>
@@ -73,7 +73,6 @@ function adotar() {
           <span class="titulo-grupo">Espécie</span>
           <div>
             <button class="especie" type="button" aria-pressed="true">
-              <PhCat weight="duotone" aria-hidden="true" />
               Gato
             </button>
           </div>
@@ -102,7 +101,7 @@ function adotar() {
         </div>
 
         <button class="button button-primary adotar" type="submit" :disabled="nomeLimpo === ''">
-          <PhHeart weight="duotone" aria-hidden="true" />
+          <IconePixel nome="coracao" />
           Adotar
         </button>
       </form>
@@ -157,19 +156,21 @@ function adotar() {
   background: radial-gradient(closest-side, var(--primary-soft) 0 92%, transparent 93%);
 }
 
+/* múltiplos inteiros do desenho (45 de largura), pra não borrar */
 .desenho {
-  width: 80%;
+  width: 180px;
 }
 
 .nome-preview {
   margin: 0;
   min-height: 1.6em;
   text-align: center;
-  font-weight: 700;
+  font-family: var(--font-pixel);
   font-size: 1.25rem;
 }
 
 .nome-preview.vazio {
+  font-family: var(--font);
   font-weight: 600;
   font-size: var(--font-size-base);
   color: var(--text-muted);
@@ -250,7 +251,7 @@ function adotar() {
 }
 
 .miniatura {
-  width: 2.75rem;
+  width: 45px;
 }
 
 .escolhas input,
@@ -276,6 +277,10 @@ function adotar() {
 
   .palco {
     width: min(100%, 24rem);
+  }
+
+  .desenho {
+    width: 270px;
   }
 
   .nome-preview {

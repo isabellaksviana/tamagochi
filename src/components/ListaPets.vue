@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { PhPlus } from '@phosphor-icons/vue'
 import DesenhoBicho from './DesenhoBicho.vue'
 import BotaoTema from './BotaoTema.vue'
+import IconePixel from './IconePixel.vue'
 import { avisoDo, expressaoDo } from '../regras'
 import type { Bicho } from '../tipos'
 
@@ -36,7 +36,7 @@ const emit = defineEmits<{
 
       <li>
         <button class="card novo" type="button" @click="emit('adotar')">
-          <span class="mais"><PhPlus weight="bold" aria-hidden="true" /></span>
+          <span class="mais"><IconePixel nome="mais" :escala="3" /></span>
           <span class="nome">Adotar</span>
         </button>
       </li>
@@ -61,7 +61,7 @@ const emit = defineEmits<{
 
 .topo h1 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.4rem;
 }
 
 .cards {
@@ -85,8 +85,8 @@ const emit = defineEmits<{
   font: inherit;
   color: var(--text);
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border: 2px solid var(--border);
+  border-radius: 16px;
   cursor: pointer;
 }
 
@@ -99,13 +99,15 @@ const emit = defineEmits<{
   outline-offset: 2px;
 }
 
+/* 45 × 2 = 90px: múltiplo inteiro do desenho, sem borrar */
 .desenho {
-  width: 7rem;
+  width: 90px;
   margin-bottom: var(--space-2);
 }
 
 .nome {
-  font-weight: 700;
+  font-family: var(--font-pixel);
+  font-size: 1.05rem;
 }
 
 .aviso {
@@ -135,10 +137,5 @@ const emit = defineEmits<{
   color: var(--primary);
   background: var(--primary-soft);
   border-radius: 50%;
-}
-
-.mais svg {
-  width: 1.75rem;
-  height: 1.75rem;
 }
 </style>

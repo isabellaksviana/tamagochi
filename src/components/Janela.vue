@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, useId } from 'vue'
-import { PhX } from '@phosphor-icons/vue'
+import IconePixel from './IconePixel.vue'
 
 // a moldura de TODOS os modais do jogo (loja, mochila, soltar): o mesmo cabeçalho e o mesmo jeito,
 // pra nenhum ficar diferente do outro
@@ -54,9 +54,8 @@ function cliqueNoFundo(evento: MouseEvent) {
           <p v-if="props.subtitulo">{{ props.subtitulo }}</p>
         </div>
         <slot name="extra" />
-        <!-- X e + sempre em traço grosso: no duotone eles ganham um quadrado pintado atrás -->
         <button class="button so-icone" type="button" :aria-label="`Fechar ${props.titulo.toLowerCase()}`" @click="fechar">
-          <PhX weight="bold" aria-hidden="true" />
+          <IconePixel nome="fechar" />
         </button>
       </header>
       <slot />
@@ -71,8 +70,8 @@ function cliqueNoFundo(evento: MouseEvent) {
   padding: 0;
   color: var(--text);
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border: 2px solid var(--border);
+  border-radius: 16px;
   box-shadow: 0 16px 48px rgb(0 0 0 / 0.45);
 }
 
@@ -97,11 +96,10 @@ function cliqueNoFundo(evento: MouseEvent) {
   margin-bottom: var(--space-4);
 }
 
-/* o desenho do bicho (ou um ícone) no canto do cabeçalho */
+/* a cabeça do bicho (ou um ícone) no canto do cabeçalho: 45 × 1 = 45px, sem borrar */
 .icone {
   flex-shrink: 0;
-  width: 3.5rem;
-  margin: -4px 0 -6px;
+  width: 45px;
 }
 
 .titulos {
@@ -111,7 +109,7 @@ function cliqueNoFundo(evento: MouseEvent) {
 
 .titulos h2 {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   line-height: 1.2;
   color: var(--primary);
 }
