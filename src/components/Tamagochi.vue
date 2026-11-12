@@ -1,40 +1,38 @@
 <script setup lang="ts">
-import { computed, type Component } from 'vue'
+import { computed } from 'vue'
 import {
   PhArrowLeft,
+  PhBackpack,
+  PhBathtub,
   PhBowlFood,
   PhCookie,
-  PhDrop,
   PhHandWaving,
-  PhHeart,
-  PhLightning,
-  PhStorefront,
+  PhMoon,
   PhYarn,
 } from '@phosphor-icons/vue'
 import DesenhoBicho from './DesenhoBicho.vue'
 import BotaoTema from './BotaoTema.vue'
+import { BARRAS } from '../barras'
 import { expressaoDo, LIMITE_BAIXO } from '../regras'
-import type { Bicho, Status } from '../tipos'
+import type { Bicho } from '../tipos'
 
 const props = defineProps<{
   bicho: Bicho
   biscoitos: number
+  itensNaMochila: number
 }>()
 
 const emit = defineEmits<{
   comeu: []
+  tomouBanho: []
   brincou: []
+  dormiu: []
   soltou: []
   voltou: []
+  abriuLoja: []
+  abriuMochila: []
 }>()
 
-// as 4 barras, na ordem em que aparecem
-const BARRAS: { chave: keyof Status; rotulo: string; icone: Component; cor: string }[] = [
-  { chave: 'fome', rotulo: 'Fome', icone: PhBowlFood, cor: '#f6a96b' },
-  { chave: 'higiene', rotulo: 'Higiene', icone: PhDrop, cor: '#7cc6f0' },
-  { chave: 'felicidade', rotulo: 'Felicidade', icone: PhHeart, cor: '#ff8fb0' },
-  { chave: 'energia', rotulo: 'Energia', icone: PhLightning, cor: '#f6d365' },
-]
 
 // a regra da carinha mora em regras.ts, porque a lista usa a mesma
 const expressao = computed(() => expressaoDo(props.bicho.status))
@@ -60,18 +58,34 @@ function excluir() {
         <button class="button so-icone" type="button" aria-label="Voltar para os meus bichinhos" @click="emit('voltou')">
           <PhArrowLeft weight="duotone" aria-hidden="true" />
         </button>
-        <!-- a loja ainda não existe: fica desligada até a parte dos biscoitos -->
-        <button class="button" type="button" disabled title="Em breve">
-        <PhStorefront weight="duotone" aria-hidden="true" />
-          Loja
-        </button>
       </div>
       <div class="direita">
-        <span class="contador" :aria-label="`${biscoitos} biscoitos`">
+        <!-- os biscoitos são a porta da loja (como a moeda nos jogos) -->
+        <button
+          class="button"
+          type="button"
+          :aria-label="`${biscoitos} biscoitos. Abrir a Lojinha`"
+          title="Lojinha"
+          @click="emit('abriuLoja')"
+        >
           <PhCookie weight="duotone" aria-hidden="true" class="icone-biscoito" />
           {{ biscoitos }}
-        </span>
+        </button>
+        <button
+          class="button"
+          type="button"
+          :aria-label="`Mochila, ${itensNaMochila} ${itensNaMochila === 1 ? 'item' : 'itens'}`"
+          @click="emit('abriuMochila')"
+        >
+          <PhBackpack weight="duotone" aria-hidden="true" />
+          <span class="rotulo-botao">Mochila</span>
+          <span v-if="itensNaMochila > 0" class="quantidade">{{ itensNaMochila }}</span>
+        </button>
         <BotaoTema />
+        <!-- soltar não é cuidado: fica longe dos botões de cuidar, pra não clicar sem querer -->
+        <button class="button so-icone" type="button" :aria-label="`Soltar ${bicho.nome}`" title="Soltar" @click="excluir">
+          <PhHandWaving weight="duotone" aria-hidden="true" />
+        </button>
       </div>
     </header>
 
@@ -110,13 +124,17 @@ function excluir() {
         <span class="circulo"><PhBowlFood weight="duotone" :size="30" aria-hidden="true" /></span>
         Alimentar
       </button>
+      <button class="acao" type="button" @click="emit('tomouBanho')" :disabled="bicho.status.higiene === 100">
+        <span class="circulo"><PhBathtub weight="duotone" :size="30" aria-hidden="true" /></span>
+        Banho
+      </button>
       <button class="acao" type="button" @click="brincar" :disabled="bicho.status.energia === 0">
         <span class="circulo"><PhYarn weight="duotone" :size="30" aria-hidden="true" /></span>
         Brincar
       </button>
-      <button class="acao soltar" type="button" @click="excluir">
-        <span class="circulo"><PhHandWaving weight="duotone" :size="30" aria-hidden="true" /></span>
-        Soltar
+      <button class="acao" type="button" @click="emit('dormiu')" :disabled="bicho.status.energia === 100">
+        <span class="circulo"><PhMoon weight="duotone" :size="30" aria-hidden="true" /></span>
+        Dormir
       </button>
     </div>
   </section>
@@ -142,25 +160,6 @@ function excluir() {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-}
-
-/* não é botão, só mostra quantos biscoitos tem: mesma altura, borda e canto do botão */
-.contador {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4375rem;
-  min-height: 2.6875rem;
-  padding: 0 var(--space-3);
-  font-weight: 600;
-  font-size: var(--font-size-sm);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-}
-
-.contador svg {
-  width: 1rem;
-  height: 1rem;
 }
 
 .icone-biscoito {
@@ -278,13 +277,44 @@ function excluir() {
   opacity: 45%;
 }
 
-.soltar .circulo {
-  color: var(--text-muted);
-  background: transparent;
-  border: 1px solid var(--border);
+/* o numerozinho de itens na mochila */
+.quantidade {
+  display: grid;
+  place-items: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.3rem;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--on-primary);
+  background: var(--primary);
+  border-radius: 999px;
 }
 
-.acao.soltar:hover .circulo {
-  background: var(--surface);
+/* celular: Loja e Mochila ficam só com o ícone (o nome continua no aria-label) */
+@media (max-width: 480px) {
+  .rotulo-botao {
+    display: none;
+  }
+
+  .direita .button:not(.so-icone) {
+    padding: 0 var(--space-3);
+  }
+}
+
+/* no computador: a tela ocupa a altura toda (menos o espaço do body); o topo fica em cima
+   e o resto (nome, bicho, barras e botões) fica no meio do que sobra */
+@media (min-width: 720px) {
+  .tela {
+    min-height: calc(100dvh - 2 * var(--space-8));
+  }
+
+  .nome {
+    margin-top: auto;
+  }
+
+  .acoes {
+    margin-bottom: auto;
+  }
 }
 </style>

@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import Tamagochi from './components/Tamagochi.vue'
-import Modal from './components/Modal.vue'
+import Janela from './components/Janela.vue'
+import DesenhoBicho from './components/DesenhoBicho.vue'
 import CriarPet from './components/CriarPet.vue'
 import ListaPets from './components/ListaPets.vue'
 import type { CorGato, Especie } from './components/bicho/cores'
+import LojaModal from './components/LojaModal.vue'
+import MochilaModal from './components/MochilaModal.vue'
 import { passarTempoAberto, passarTempoFechado } from './regras'
-import type { Bicho } from './tipos'
+import type { ItemLoja } from './loja'
+import type { Bicho, Status } from './tipos'
 
 // a versão antiga salvava só isto (e a fome ia de 0 a 5, com 0 = satisfeito)
 type BichoAntigo = {
@@ -77,22 +81,86 @@ function irParaLista() {
   tela.value = bichos.value.length === 0 ? 'criar' : 'lista'
 }
 
-function quandoComer() {
+// os biscoitos são de quem joga, não de um bicho só
+const biscoitos = ref(Number(localStorage.getItem('biscoitos') ?? 0))
+watch(biscoitos, (quantos) => localStorage.setItem('biscoitos', String(quantos)))
+
+// abaixo disso, a barra "estava precisando": cuidar dela rende biscoito
+const PRECISANDO = 90
+
+// sobe uma barra do bicho aberto; se ela estava precisando, ganha 1 biscoito
+function cuidar(chave: keyof Status, quanto: number) {
   const bicho = bichoAtual.value
   if (bicho === null) {
     return
   }
-  bicho.status.fome = limitar(bicho.status.fome + 25)
+  if (bicho.status[chave] < PRECISANDO) {
+    biscoitos.value++
+  }
+  bicho.status[chave] = limitar(bicho.status[chave] + quanto)
 }
 
+function quandoComer() {
+  cuidar('fome', 25)
+}
+
+function quandoBanho() {
+  cuidar('higiene', 35)
+}
+
+function quandoDormir() {
+  cuidar('energia', 35)
+}
+
+// brincar alegra, mas cansa e dá um pouco de fome
 function quandoBrincar() {
+  cuidar('felicidade', 20)
   const bicho = bichoAtual.value
   if (bicho === null) {
     return
   }
-  bicho.status.felicidade = limitar(bicho.status.felicidade + 20)
   bicho.status.energia = limitar(bicho.status.energia - 10)
   bicho.status.fome = limitar(bicho.status.fome - 5)
+}
+
+// ============ loja e mochila ============
+const lojaAberta = ref(false)
+const mochilaAberta = ref(false)
+
+// a mochila é de quem joga (como os biscoitos): quantos de cada item, { sache: 2, bolinha: 1 }
+const mochilaSalva = localStorage.getItem('mochila')
+const mochila = ref<Record<string, number>>(mochilaSalva ? JSON.parse(mochilaSalva) : {})
+watch(mochila, (agora) => localStorage.setItem('mochila', JSON.stringify(agora)), { deep: true })
+
+// comprar: paga e guarda na mochila (depois a pessoa escolhe pra quem dar)
+function comprar(item: ItemLoja) {
+  if (biscoitos.value < item.preco) {
+    return
+  }
+  biscoitos.value -= item.preco
+  mochila.value[item.id] = (mochila.value[item.id] ?? 0) + 1
+}
+
+// dar: tira um da mochila e o bicho aberto ganha o efeito
+function dar(item: ItemLoja) {
+  const bicho = bichoAtual.value
+  const quantos = mochila.value[item.id] ?? 0
+  if (bicho === null || quantos === 0) {
+    return
+  }
+  mochila.value[item.id] = quantos - 1
+  for (const [chave, quanto] of Object.entries(item.efeito) as [keyof Status, number][]) {
+    bicho.status[chave] = limitar(bicho.status[chave] + quanto)
+  }
+}
+
+// total de itens na mochila (o numerozinho no botão)
+const itensNaMochila = computed(() => Object.values(mochila.value).reduce((soma, quantos) => soma + quantos, 0))
+
+// da mochila vazia, um atalho pra loja
+function daMochilaPraLoja() {
+  mochilaAberta.value = false
+  lojaAberta.value = true
 }
 
 function quandoSoltou() {
@@ -156,29 +224,62 @@ watch(
     <Tamagochi
       v-if="tela === 'pet' && bichoAtual !== null"
       :bicho="bichoAtual"
-      :biscoitos="0"
+      :biscoitos="biscoitos"
       @comeu="quandoComer"
+      @tomou-banho="quandoBanho"
       @brincou="quandoBrincar"
+      @dormiu="quandoDormir"
       @soltou="quandoSoltou"
       @voltou="irParaLista"
+      @abriu-loja="lojaAberta = true"
+      :itens-na-mochila="itensNaMochila"
+      @abriu-mochila="mochilaAberta = true"
     />
 
     <ListaPets v-else-if="tela === 'lista'" :bichos="bichos" @abriu="abrir" @adotar="tela = 'criar'" />
 
     <CriarPet v-else :pode-voltar="bichos.length > 0" @adotou="adotar" @voltou="irParaLista" />
 
-    <Modal v-if="bichoSoltando !== null">
-      <p>Tem certeza que quer soltar {{ bichoSoltando.nome }}?</p>
+    <!-- fica fora da corrente v-if / v-else-if / v-else das telas: ela abre POR CIMA da tela do pet -->
+    <LojaModal
+      v-if="lojaAberta && bichoAtual !== null"
+      :biscoitos="biscoitos"
+      :bicho="bichoAtual"
+      @comprou="comprar"
+      @fechou="lojaAberta = false"
+    />
+
+    <MochilaModal
+      v-if="mochilaAberta && bichoAtual !== null"
+      :mochila="mochila"
+      :bicho="bichoAtual"
+      @deu="dar"
+      @ir-para-loja="daMochilaPraLoja"
+      @fechou="mochilaAberta = false"
+    />
+
+    <!-- a mesma Janela da loja e da mochila, na versão pequena -->
+    <Janela v-if="bichoSoltando !== null" :titulo="`Soltar ${bichoSoltando.nome}?`" pequena @fechou="cancelar">
+      <template #icone>
+        <DesenhoBicho :especie="bichoSoltando.especie" :cor="bichoSoltando.cor" expressao="triste" />
+      </template>
+
+      <p class="aviso-soltar">Essa ação não pode ser desfeita.</p>
 
       <div class="acoes">
-        <button class="button" @click="cancelar">Cancelar</button>
-        <button class="button button-danger" @click="soltar">Soltar</button>
+        <button class="button" type="button" @click="cancelar">Cancelar</button>
+        <button class="button button-danger" type="button" @click="soltar">Soltar</button>
       </div>
-    </Modal>
+    </Janela>
   </main>
 </template>
 
 <style scoped>
+.aviso-soltar {
+  margin: 0 0 var(--space-5);
+  color: var(--text-muted);
+}
+
 .acoes {
   display: flex;
   gap: var(--space-3);

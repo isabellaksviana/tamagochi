@@ -18,6 +18,9 @@
 
   --secondary: #f6d365;
 
+  --success: #7fd6a0;
+  --success-soft: #1a2b22;
+
   --danger: #8f1d1d;
   --on-danger: #fff8f7;
   --danger-text: #ff8f85;
@@ -38,6 +41,9 @@
   --on-primary: #ffffff;
 
   --secondary: #950c72;
+
+  --success: #134b2c;
+  --success-soft: #e1e6e8;
 
   --danger: #991b1b;
   --on-danger: #fff8f7;
@@ -175,4 +181,48 @@ input:focus-visible {
 .button-danger:hover:not(:disabled) {
   background: var(--danger);
   filter: brightness(1.08);
+}
+
+/* ============ Confirmação ("deu certo!") ============
+   A faixa verde da loja e da mochila, e o botão que vira "Comprado!" / "Dado!". */
+/* flutua por cima do começo da lista (não reserva espaço, então não deixa buraco nem faz a lista pular),
+   e o sticky deixa ela à vista mesmo com a lista rolada */
+.confirmacao {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.5rem;
+  margin: 0 0 -2.5rem;
+  padding: 0 var(--space-3);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  color: var(--success);
+  background: var(--success-soft);
+  border: 1px solid var(--success);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.confirmacao.visivel {
+  opacity: 1;
+}
+
+.confirmacao svg {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+}
+
+.button.confirmado,
+.button.confirmado:hover:not(:disabled) {
+  color: var(--success-soft);
+  background: var(--success);
+  border-color: var(--success);
+  filter: none;
 }

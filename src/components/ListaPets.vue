@@ -36,7 +36,7 @@ const emit = defineEmits<{
 
       <li>
         <button class="card novo" type="button" @click="emit('adotar')">
-          <span class="mais"><PhPlus weight="duotone" aria-hidden="true" /></span>
+          <span class="mais"><PhPlus weight="bold" aria-hidden="true" /></span>
           <span class="nome">Adotar</span>
         </button>
       </li>
