@@ -17,6 +17,8 @@ const props = defineProps<{
   noite: boolean
   hora: string
   doente: boolean
+  // durante a Chuva de petiscos, o visor vira o palco do jogo (o gato de sempre sai de cena)
+  jogando?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -101,15 +103,18 @@ const passeando = computed(() => fase.value !== 'ovo' && !dormindo.value && !pro
     </span>
     <span class="hora numero">{{ hora }}</span>
 
+    <!-- o palco dos jogos: a Chuva de petiscos "teleporta" o jogo pra cá -->
+    <div id="palco-do-jogo" class="palco-do-jogo" :class="{ ativo: jogando }" />
+
     <!-- o ovo: balança e racha a cada toque -->
-    <button v-if="fase === 'ovo'" class="ovo" type="button" :aria-label="`Tocar no ovo (${bicho.toquesNoOvo} de 5)`" @click="emit('tocouOvo')">
+    <button v-if="!jogando && fase === 'ovo'" class="ovo" type="button" :aria-label="`Tocar no ovo (${bicho.toquesNoOvo} de 5)`" @click="emit('tocouOvo')">
       <svg :viewBox="`0 0 ${LARGURA} ${ALTURA}`" shape-rendering="crispEdges" aria-hidden="true">
         <rect v-for="(r, i) in ovo" :key="i" :x="r.x" :y="r.y" :width="r.largura" height="1" :fill="r.cor" />
       </svg>
     </button>
 
     <button
-      v-else
+      v-else-if="!jogando"
       class="gato"
       :class="{ passeando }"
       type="button"
@@ -121,7 +126,7 @@ const passeando = computed(() => fase.value !== 'ovo' && !dormindo.value && !pro
     </button>
 
     <!-- a caixinha de areia do canto: suja quando a higiene cai (o "cocô" do tamagochi) -->
-    <span v-if="fase !== 'ovo'" class="caixinha" :title="caixinhaSuja ? 'A caixinha está suja' : 'Caixinha limpinha'">
+    <span v-if="fase !== 'ovo' && !jogando" class="caixinha" :title="caixinhaSuja ? 'A caixinha está suja' : 'Caixinha limpinha'">
       <IconePixel :nome="caixinhaSuja ? 'caixinhaSuja' : 'caixinha'" :escala="3" />
     </span>
 
@@ -183,6 +188,18 @@ const passeando = computed(() => fase.value !== 'ovo' && !dormindo.value && !pro
 .visor.apagado .hora,
 .visor.apagado .bateria {
   color: #8f89a8;
+}
+
+/* o palco do jogo cobre a telinha só durante a partida (fora dela, não atrapalha os cliques) */
+.palco-do-jogo {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.palco-do-jogo.ativo {
+  pointer-events: auto;
 }
 
 /* as estrelinhas: quadradinhos de pixel espalhados (um elemento só, várias sombras) */

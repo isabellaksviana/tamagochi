@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import BotaoTema from './BotaoTema.vue'
+import BotaoSom from './BotaoSom.vue'
+import { tocar } from '../som'
 import IconePixel from './IconePixel.vue'
 import Visor from './Visor.vue'
 import Minijogo from './Minijogo.vue'
+import ChuvaDePetiscos from './ChuvaDePetiscos.vue'
 import Diario from './Diario.vue'
 import { BARRAS } from '../barras'
 import { diasDe, expressaoDo, faseDo, LIMITE_BAIXO, MINIMO, NOME_DA_FASE, type Periodo } from '../regras'
@@ -51,8 +54,21 @@ const NAVEGACAO: { id: Aba | 'loja' | 'mochila'; rotulo: string; icone: NomeIcon
   { id: 'diario', rotulo: 'Diário', icone: 'livro' },
 ]
 
+// na aba Jogar: qual jogo está aberto (null = a escolha)
+type Jogo = 'lado' | 'chuva'
+const jogo = ref<Jogo | null>(null)
+// a Chuva de petiscos acontece dentro do visor: enquanto ela roda, o gato de sempre sai de cena
+const jogandoNoVisor = ref(false)
+
+function escolherJogo(qual: Jogo | null) {
+  tocar('clique')
+  jogo.value = qual
+  olharDoJogo.value = null
+}
+
 // Loja e Mochila abrem as janelas; as outras trocam o que aparece embaixo do visor
 function navegar(id: Aba | 'loja' | 'mochila') {
+  tocar('clique')
   if (id === 'loja') return emit('abriuLoja')
   if (id === 'mochila') return emit('abriuMochila')
   aba.value = id
@@ -135,6 +151,7 @@ onUnmounted(() => {
           <IconePixel nome="biscoito" />
           <span class="numero">{{ biscoitos }}</span>
         </button>
+        <BotaoSom />
         <BotaoTema />
       </div>
     </header>
@@ -151,6 +168,7 @@ onUnmounted(() => {
       :noite="noite"
       :hora="hora"
       :doente="doente"
+      :jogando="jogandoNoVisor"
       @tocou-ovo="emit('tocouOvo')"
       @carinho="emit('carinho')"
     />
@@ -210,13 +228,35 @@ onUnmounted(() => {
     <template v-else-if="aba === 'jogar'">
       <p v-if="ehOvo" class="dica">Ainda é um ovo! Espere chocar pra brincar.</p>
       <p v-else-if="dormindo" class="dica">Psiu, {{ bicho.nome }} está dormindo. Acenda a luz pra brincar.</p>
-      <Minijogo
-        v-else
-        :nome="bicho.nome"
-        :energia="bicho.status.energia"
-        @olhou="olharDoJogo = $event"
-        @terminou="emit('jogou', $event)"
-      />
+
+      <!-- a escolha do jogo -->
+      <div v-else-if="jogo === null" class="escolha">
+        <button class="cartao-jogo" type="button" @click="escolherJogo('lado')">
+          <IconePixel nome="setaDireita" :escala="4" />
+          <strong>Pra que lado?</strong>
+          <span>Adivinhe pra onde o gato vai olhar.</span>
+        </button>
+        <button class="cartao-jogo" type="button" @click="escolherJogo('chuva')">
+          <IconePixel nome="peixe" :escala="4" />
+          <strong>Chuva de petiscos</strong>
+          <span>Mexa o gato pra pegar o que cai do céu.</span>
+        </button>
+      </div>
+
+      <template v-else>
+        <button class="button trocar-jogo" type="button" @click="escolherJogo(null)">
+          <IconePixel nome="seta" />
+          Trocar de jogo
+        </button>
+        <Minijogo
+          v-if="jogo === 'lado'"
+          :nome="bicho.nome"
+          :energia="bicho.status.energia"
+          @olhou="olharDoJogo = $event"
+          @terminou="emit('jogou', $event)"
+        />
+        <ChuvaDePetiscos v-else :bicho="bicho" @jogando="jogandoNoVisor = $event" @terminou="emit('jogou', $event)" />
+      </template>
     </template>
 
     <!-- ============ aba Diário ============ -->
@@ -415,6 +455,55 @@ onUnmounted(() => {
 .acao:disabled {
   cursor: not-allowed;
   opacity: 45%;
+}
+
+/* ============ escolha do jogo ============ */
+.escolha {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.cartao-jogo {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-3);
+  font: inherit;
+  color: var(--text);
+  text-align: center;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  cursor: pointer;
+}
+
+.cartao-jogo:hover {
+  background: var(--surface-strong);
+  border-color: var(--primary);
+}
+
+.cartao-jogo:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.cartao-jogo strong {
+  font-family: var(--font-pixel);
+  font-weight: 400;
+  font-size: 0.95rem;
+}
+
+.cartao-jogo span {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+
+.trocar-jogo {
+  align-self: flex-start;
+  min-height: 2.25rem;
+  padding: 0 var(--space-3);
 }
 
 /* ============ navegação de baixo ============ */
