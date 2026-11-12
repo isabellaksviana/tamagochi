@@ -30,6 +30,9 @@ const QUEDA_POR_SEGUNDO: Status = {
   higiene: 100 / (15 * 60),
 }
 
+// nenhuma barra chega a zero: no máximo fica "no cheiro" (quase vazia, no vermelho)
+export const MINIMO = 5
+
 // com o jogo fechado, o tempo passa 20 vezes mais devagar...
 const LENTIDAO_FECHADO = 20
 // ...e nunca deixa a barra abaixo disto (o bicho fica carente, mas não no vermelho)
@@ -39,10 +42,10 @@ function chavesDo(status: Status) {
   return Object.keys(status) as (keyof Status)[]
 }
 
-// jogo aberto: cai no ritmo normal, até 0
+// jogo aberto: cai no ritmo normal, até o mínimo
 export function passarTempoAberto(status: Status, segundos: number) {
   for (const chave of chavesDo(status)) {
-    status[chave] = Math.max(0, status[chave] - QUEDA_POR_SEGUNDO[chave] * segundos)
+    status[chave] = Math.max(MINIMO, status[chave] - QUEDA_POR_SEGUNDO[chave] * segundos)
   }
 }
 

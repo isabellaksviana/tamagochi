@@ -8,7 +8,7 @@ import ListaPets from './components/ListaPets.vue'
 import type { CorGato, Especie } from './components/bicho/cores'
 import LojaModal from './components/LojaModal.vue'
 import MochilaModal from './components/MochilaModal.vue'
-import { passarTempoAberto, passarTempoFechado } from './regras'
+import { MINIMO, passarTempoAberto, passarTempoFechado } from './regras'
 import type { ItemLoja } from './loja'
 import type { Bicho, Status } from './tipos'
 
@@ -45,9 +45,9 @@ function carregarBichos(): Bicho[] {
   })
 }
 
-// nunca passa de 100 nem fica abaixo de 0
+// nunca passa de 100 nem fica abaixo do mínimo (nenhuma barra chega a zero)
 function limitar(valor: number) {
-  return Math.min(100, Math.max(0, valor))
+  return Math.min(100, Math.max(MINIMO, valor))
 }
 
 const bichos = ref<Bicho[]>(carregarBichos())

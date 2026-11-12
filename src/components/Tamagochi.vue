@@ -13,7 +13,7 @@ import {
 import DesenhoBicho from './DesenhoBicho.vue'
 import BotaoTema from './BotaoTema.vue'
 import { BARRAS } from '../barras'
-import { expressaoDo, LIMITE_BAIXO } from '../regras'
+import { expressaoDo, LIMITE_BAIXO, MINIMO } from '../regras'
 import type { Bicho } from '../tipos'
 
 const props = defineProps<{
@@ -128,7 +128,7 @@ function excluir() {
         <span class="circulo"><PhDrop weight="duotone" :size="30" aria-hidden="true" /></span>
         Se lamber
       </button>
-      <button class="acao" type="button" @click="brincar" :disabled="bicho.status.energia === 0">
+      <button class="acao" type="button" @click="brincar" :disabled="bicho.status.energia <= MINIMO">
         <span class="circulo"><PhYarn weight="duotone" :size="30" aria-hidden="true" /></span>
         Brincar
       </button>
