@@ -2,7 +2,8 @@
 import { computed, ref, watch } from 'vue'
 import Tamagochi from './components/Tamagochi.vue'
 import Modal from './components/Modal.vue'
-import BotaoTema from './components/BotaoTema.vue'
+import CriarPet from './components/CriarPet.vue'
+import type { CorGato, Especie } from './components/bicho/cores'
 import type { Bicho } from './tipos'
 
 // a versão antiga salvava só isto (e a fome ia de 0 a 5, com 0 = satisfeito)
@@ -38,7 +39,6 @@ function limitar(valor: number) {
   return Math.min(100, Math.max(0, valor))
 }
 
-const novoNome = ref('')
 const bichos = ref<Bicho[]>(carregarBichos())
 const idSalvo = localStorage.getItem('proximoId')
 let proximoId = idSalvo ? Number(idSalvo) : 1
@@ -69,20 +69,17 @@ function quandoSoltou() {
   bichoSoltando.value = bichoAtual.value
 }
 
-function adotar() {
-  if (novoNome.value.trim() === '') {
-    return
-  }
+// a tela de criar manda o que a pessoa escolheu; aqui o bicho ganha id e status
+function adotar(novo: { nome: string; especie: Especie; cor: CorGato }) {
   bichos.value.unshift({
     id: proximoId,
-    nome: novoNome.value.trim(),
-    especie: 'gato',
-    cor: 'laranja',
+    nome: novo.nome,
+    especie: novo.especie,
+    cor: novo.cor,
     status: { fome: 80, higiene: 80, felicidade: 80, energia: 80 },
   })
   proximoId++
   localStorage.setItem('proximoId', String(proximoId))
-  novoNome.value = ''
 }
 
 function cancelar() {
@@ -118,17 +115,7 @@ watch(
       @soltou="quandoSoltou"
     />
 
-    <section v-else class="sem-bicho">
-      <header class="cabecalho">
-        <h1>Tamagochi</h1>
-        <BotaoTema />
-      </header>
-      <p>☹️ Nenhum bichinho por aqui. Adote um!</p>
-      <div class="adotar">
-        <input v-model="novoNome" placeholder="Dê um nome para adotar" @keyup.enter="adotar" />
-        <button class="button button-primary" @click="adotar" :disabled="novoNome.trim() === ''">Adotar</button>
-      </div>
-    </section>
+    <CriarPet v-else @adotou="adotar" />
 
     <Modal v-if="bichoSoltando !== null">
       <p>Tem certeza que quer soltar {{ bichoSoltando.nome }}?</p>
@@ -142,36 +129,9 @@ watch(
 </template>
 
 <style scoped>
-.jogo {
-  max-width: 420px;
-  margin: 0 auto;
-}
-
-.sem-bicho {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.cabecalho {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
 .acoes {
   display: flex;
   gap: var(--space-3);
   justify-content: end;
-}
-
-.adotar {
-  display: flex;
-  gap: var(--space-3);
-}
-
-/* o campo estica e ocupa o espaço que sobra do botão */
-.adotar input {
-  flex: 1;
-  min-width: 0;
 }
 </style>
