@@ -32,7 +32,7 @@ const cauda = 'M128 198 C170 202 184 170 171 150 C165 140 156 138 152 146'
       v-if="padrao === 'tricolor'"
       :d="cauda"
       fill="none"
-      stroke="#5E5258"
+      stroke="var(--mancha-escura)"
       stroke-width="16"
       stroke-dasharray="16 20"
     />
@@ -49,8 +49,8 @@ const cauda = 'M128 198 C170 202 184 170 171 150 C165 140 156 138 152 146'
         fill="none"
       />
       <template v-if="padrao === 'tricolor'">
-        <path d="M50 150 Q72 140 80 160 Q76 186 50 196 Z" fill="#FFA76E" />
-        <path d="M150 168 Q126 166 124 186 Q130 206 150 206 Z" fill="#5E5258" />
+        <path d="M50 150 Q72 140 80 160 Q76 186 50 196 Z" fill="var(--mancha-clara)" />
+        <path d="M150 168 Q126 166 124 186 Q130 206 150 206 Z" fill="var(--mancha-escura)" />
       </template>
     </g>
     <path :d="corpo" fill="none" :stroke="contorno" stroke-width="4" stroke-linejoin="round" />
@@ -77,11 +77,11 @@ const cauda = 'M128 198 C170 202 184 170 171 150 C165 140 156 138 152 146'
     <g :stroke="contorno" stroke-width="4" stroke-linejoin="round">
       <path
         d="M38 70 C34 45 38 20 46 12 C52 8 58 12 88 34 Z"
-        :fill="padrao === 'tricolor' ? '#FFA76E' : 'var(--pelo)'"
+        :fill="padrao === 'tricolor' ? 'var(--mancha-clara)' : 'var(--pelo)'"
       />
       <path
         d="M162 70 C166 45 162 20 154 12 C148 8 142 12 112 34 Z"
-        :fill="padrao === 'tricolor' ? '#5E5258' : 'var(--pelo)'"
+        :fill="padrao === 'tricolor' ? 'var(--mancha-escura)' : 'var(--pelo)'"
       />
     </g>
     <path d="M48 58 C46 42 48 28 52 22 L76 38 Z" fill="var(--orelha)" />
@@ -95,8 +95,8 @@ const cauda = 'M128 198 C170 202 184 170 171 150 C165 140 156 138 152 146'
         <path d="M28 80 L44 83 M28 93 L41 93 M172 80 L156 83 M172 93 L159 93" />
       </g>
       <template v-if="padrao === 'tricolor'">
-        <path d="M20 20 L92 20 Q84 46 74 70 Q56 96 20 104 Z" fill="#FFA76E" />
-        <path d="M180 20 L110 20 Q118 44 128 66 Q146 90 180 96 Z" fill="#5E5258" />
+        <path d="M20 20 L92 20 Q84 46 74 70 Q56 96 20 104 Z" fill="var(--mancha-clara)" />
+        <path d="M180 20 L110 20 Q118 44 128 66 Q146 90 180 96 Z" fill="var(--mancha-escura)" />
       </template>
     </g>
     <path :d="cabeca" fill="none" :stroke="contorno" stroke-width="4" />

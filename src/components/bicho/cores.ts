@@ -21,7 +21,11 @@ export const PELAGENS_GATO: Record<CorGato, Pelagem> = {
   },
   branco: { cores: { pelo: '#FFFBF7', focinho: '#FFFFFF' }, padrao: null },
   cinza: { cores: { pelo: '#CFC8CB', listra: '#8F878C', focinho: '#F4F0F1' }, padrao: 'listras' },
-  tricolor: { cores: { pelo: '#FFF8F0', focinho: '#FFFFFF', cauda: '#FFA76E' }, padrao: 'tricolor' },
+  // tricolor em tom pastel: as manchas são um laranja-pêssego e um cinza-lilás suaves
+  tricolor: {
+    cores: { pelo: '#FFF8F0', focinho: '#FFFFFF', 'mancha-clara': '#FFCBA4', 'mancha-escura': '#A99AA6', cauda: '#FFCBA4' },
+    padrao: 'tricolor',
+  },
 }
 
 // o que vale quando a pelagem não diz nada
