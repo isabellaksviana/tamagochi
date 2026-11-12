@@ -61,6 +61,50 @@ export function passarTempoFechado(status: Status, segundos: number) {
   }
 }
 
+// luz apagada: a energia sobe devagar (cheia em ~1 hora) e as outras barras param de cair
+const SONO_POR_SEGUNDO = 100 / 3600
+
+export function dormirUmPouco(status: Status, segundos: number) {
+  status.energia = Math.min(100, status.energia + SONO_POR_SEGUNDO * segundos)
+}
+
+// ============ crescer ============
+export type Fase = 'ovo' | 'filhote' | 'jovem' | 'adulto'
+
+const UM_DIA = 24 * 3600
+
+export function faseDo(chocou: boolean, idade: number): Fase {
+  if (!chocou) return 'ovo'
+  if (idade < UM_DIA) return 'filhote'
+  if (idade < 3 * UM_DIA) return 'jovem'
+  return 'adulto'
+}
+
+export const NOME_DA_FASE: Record<Fase, string> = {
+  ovo: 'Ovo',
+  filhote: 'Filhote',
+  jovem: 'Jovem',
+  adulto: 'Adulto',
+}
+
+export function diasDe(idade: number) {
+  return Math.floor(idade / UM_DIA)
+}
+
+// o ovo choca sozinho depois disto (ou com toques)
+export const OVO_CHOCA_EM = 30_000
+export const TOQUES_PRA_CHOCAR = 5
+
+// ============ dia e noite ============
+// noite = das 20h às 7h (hora de verdade), a não ser que o modo demonstração force
+export type Periodo = 'auto' | 'dia' | 'noite'
+
+export function ehNoite(agora: Date, periodo: Periodo) {
+  if (periodo !== 'auto') return periodo === 'noite'
+  const hora = agora.getHours()
+  return hora >= 20 || hora < 7
+}
+
 // o status mais baixo do bicho
 function piorStatus(status: Status): keyof Status {
   return chavesDo(status).reduce((a, b) => (status[a] <= status[b] ? a : b))

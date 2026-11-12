@@ -9,9 +9,18 @@ import ListaPets from './components/ListaPets.vue'
 import type { CorGato, Especie } from './components/bicho/cores'
 import LojaModal from './components/LojaModal.vue'
 import MochilaModal from './components/MochilaModal.vue'
-import { MINIMO, passarTempoAberto, passarTempoFechado } from './regras'
+import {
+  dormirUmPouco,
+  ehNoite,
+  MINIMO,
+  OVO_CHOCA_EM,
+  passarTempoAberto,
+  passarTempoFechado,
+  TOQUES_PRA_CHOCAR,
+  type Periodo,
+} from './regras'
 import type { ItemLoja } from './loja'
-import type { Bicho, Status } from './tipos'
+import { CONTADORES_ZERADOS, type Bicho, type Status } from './tipos'
 
 // a versão antiga salvava só isto (e a fome ia de 0 a 5, com 0 = satisfeito)
 type BichoAntigo = {
@@ -20,29 +29,43 @@ type BichoAntigo = {
   fome: number
 }
 
+const TRES_DIAS = 3 * 24 * 3600
+
+// completa o que faltar em bichos salvos por versões antigas do jogo
+function completar(bicho: Partial<Bicho> & Pick<Bicho, 'id' | 'nome' | 'status'>): Bicho {
+  return {
+    especie: 'gato',
+    cor: 'laranja',
+    // quem já existia antes do ovo é adulto
+    chocou: true,
+    ovoDesde: 0,
+    toquesNoOvo: 0,
+    idade: TRES_DIAS,
+    adotadoEm: Date.now(),
+    luzApagada: false,
+    doente: false,
+    segundosNoVermelho: 0,
+    ...bicho,
+    contadores: { ...CONTADORES_ZERADOS, ...bicho.contadores },
+  }
+}
+
 function carregarBichos(): Bicho[] {
   const salvos = localStorage.getItem('bichos')
   if (!salvos) {
     return []
   }
   const lista: (Bicho | BichoAntigo)[] = JSON.parse(salvos)
-  // quem já está no formato novo passa direto; quem é antigo é completado
   return lista.map((bicho) => {
     if ('status' in bicho) {
-      return bicho
+      return completar(bicho)
     }
-    return {
+    // o formato bem antigo (só nome e fome de 0 a 5)
+    return completar({
       id: bicho.id,
       nome: bicho.nome,
-      especie: 'gato',
-      cor: 'laranja',
-      status: {
-        fome: 100 - bicho.fome * 20,
-        higiene: 80,
-        felicidade: 80,
-        energia: 80,
-      },
-    }
+      status: { fome: 100 - bicho.fome * 20, higiene: 80, felicidade: 80, energia: 80 },
+    })
   })
 }
 
@@ -53,11 +76,16 @@ function limitar(valor: number) {
 
 const bichos = ref<Bicho[]>(carregarBichos())
 
-// quando o jogo abre, desconta o tempo que ele ficou fechado (devagar e com piso)
+// quando o jogo abre, desconta o tempo que ele ficou fechado (com piso) e soma na idade
 const ultimaVisita = Number(localStorage.getItem('ultimaVisita'))
 if (ultimaVisita > 0) {
   const segundosFechado = (Date.now() - ultimaVisita) / 1000
-  bichos.value.forEach((bicho) => passarTempoFechado(bicho.status, segundosFechado))
+  bichos.value.forEach((bicho) => {
+    if (!bicho.chocou) return
+    if (bicho.luzApagada) dormirUmPouco(bicho.status, segundosFechado)
+    else passarTempoFechado(bicho.status, segundosFechado)
+    bicho.idade += segundosFechado
+  })
 }
 const idSalvo = localStorage.getItem('proximoId')
 let proximoId = idSalvo ? Number(idSalvo) : 1
@@ -82,6 +110,19 @@ function irParaLista() {
   tela.value = bichos.value.length === 0 ? 'criar' : 'lista'
 }
 
+// ============ modo demonstração e dia/noite ============
+// demo: um dia de idade passa em 1 minuto e as barras caem 20× mais rápido (pra apresentar)
+const demo = ref(localStorage.getItem('demo') === 'sim')
+watch(demo, (ligado) => localStorage.setItem('demo', ligado ? 'sim' : 'nao'))
+const ritmoDasBarras = computed(() => (demo.value ? 20 : 1))
+const ritmoDaIdade = computed(() => (demo.value ? 1440 : 1))
+
+const periodo = ref<Periodo>((localStorage.getItem('periodo') as Periodo | null) ?? 'auto')
+watch(periodo, (agora) => localStorage.setItem('periodo', agora))
+const agora = ref(new Date())
+const noite = computed(() => ehNoite(agora.value, periodo.value))
+
+// ============ biscoitos ============
 // os biscoitos são de quem joga, não de um bicho só
 const biscoitos = ref(Number(localStorage.getItem('biscoitos') ?? 0))
 watch(biscoitos, (quantos) => localStorage.setItem('biscoitos', String(quantos)))
@@ -101,6 +142,7 @@ if (localStorage.getItem('ultimoBonus') !== hoje) {
   setTimeout(() => (ganhouBonus.value = false), 6000)
 }
 
+// ============ cuidados ============
 // sobe uma barra do bicho aberto; se ela estava precisando, ganha 1 biscoito
 function cuidar(chave: keyof Status, quanto: number) {
   const bicho = bichoAtual.value
@@ -115,14 +157,24 @@ function cuidar(chave: keyof Status, quanto: number) {
 
 function quandoAlimentar() {
   cuidar('fome', 25)
+  if (bichoAtual.value) bichoAtual.value.contadores.alimentou++
 }
 
 function quandoLimparCaixinha() {
   cuidar('higiene', 35)
+  if (bichoAtual.value) bichoAtual.value.contadores.caixinhas++
 }
 
+// apagar a luz: ele dorme até acender (a energia sobe aos poucos no relógio do jogo)
 function quandoApagarLuz() {
-  cuidar('energia', 35)
+  const bicho = bichoAtual.value
+  if (bicho === null) return
+  bicho.luzApagada = true
+  if (noite.value) bicho.contadores.noites++
+}
+
+function quandoAcenderLuz() {
+  if (bichoAtual.value) bichoAtual.value.luzApagada = false
 }
 
 // brincar alegra, mas cansa e dá um pouco de fome
@@ -134,7 +186,47 @@ function quandoBrincar() {
   }
   bicho.status.energia = limitar(bicho.status.energia - 10)
   bicho.status.fome = limitar(bicho.status.fome - 5)
+  bicho.contadores.brincou++
 }
+
+// carinho: um pouquinho de felicidade, no máximo 1 vez a cada 5 segundos (pra não virar fábrica)
+let ultimoCarinho = 0
+function quandoCarinho() {
+  const bicho = bichoAtual.value
+  if (bicho === null || Date.now() - ultimoCarinho < 5000) return
+  ultimoCarinho = Date.now()
+  bicho.status.felicidade = limitar(bicho.status.felicidade + 2)
+  bicho.contadores.carinhos++
+}
+
+// minijogo: cada acerto vale 1 biscoito; alegra e cansa
+function quandoJogou(acertos: number) {
+  const bicho = bichoAtual.value
+  if (bicho === null) return
+  biscoitos.value += acertos
+  bicho.status.felicidade = limitar(bicho.status.felicidade + 15)
+  bicho.status.energia = limitar(bicho.status.energia - 10)
+  bicho.contadores.biscoitosNoJogo += acertos
+  bicho.contadores.brincou++
+}
+
+// ============ o ovo ============
+function chocar(bicho: Bicho) {
+  bicho.chocou = true
+  bicho.idade = 0
+}
+
+function quandoTocarNoOvo() {
+  const bicho = bichoAtual.value
+  if (bicho === null || bicho.chocou) return
+  bicho.toquesNoOvo++
+  if (bicho.toquesNoOvo >= TOQUES_PRA_CHOCAR) chocar(bicho)
+}
+
+// ============ doença ============
+// uma barra abaixo disso por tempo demais deixa o bicho doente
+const VERMELHO_DOENTE = 15
+const TEMPO_PRA_ADOECER = 30 * 60
 
 // ============ loja e mochila ============
 const lojaAberta = ref(false)
@@ -159,7 +251,7 @@ function comprar(item: ItemLoja) {
   mochila.value[item.id] = (mochila.value[item.id] ?? 0) + 1
 }
 
-// dar: tira um da mochila e o bicho aberto ganha o efeito
+// dar: tira um da mochila e o bicho aberto ganha o efeito (o remédio cura)
 function dar(item: ItemLoja) {
   const bicho = bichoAtual.value
   const quantos = mochila.value[item.id] ?? 0
@@ -169,6 +261,10 @@ function dar(item: ItemLoja) {
   mochila.value[item.id] = quantos - 1
   for (const [chave, quanto] of Object.entries(item.efeito) as [keyof Status, number][]) {
     bicho.status[chave] = limitar(bicho.status[chave] + quanto)
+  }
+  if (item.cura) {
+    bicho.doente = false
+    bicho.segundosNoVermelho = 0
   }
 }
 
@@ -185,16 +281,22 @@ function quandoSoltou() {
   bichoSoltando.value = bichoAtual.value
 }
 
-// a tela de criar manda o que a pessoa escolheu; aqui o bicho ganha id e status
+// a tela de criar manda o que a pessoa escolheu; aqui o bicho nasce... como ovo
 function adotar(novo: { nome: string; especie: Especie; cor: CorGato }) {
   const id = proximoId
-  bichos.value.unshift({
-    id,
-    nome: novo.nome,
-    especie: novo.especie,
-    cor: novo.cor,
-    status: { fome: 80, higiene: 80, felicidade: 80, energia: 80 },
-  })
+  bichos.value.unshift(
+    completar({
+      id,
+      nome: novo.nome,
+      especie: novo.especie,
+      cor: novo.cor,
+      status: { fome: 80, higiene: 80, felicidade: 80, energia: 80 },
+      chocou: false,
+      ovoDesde: Date.now(),
+      idade: 0,
+      adotadoEm: Date.now(),
+    }),
+  )
   proximoId++
   localStorage.setItem('proximoId', String(proximoId))
   // quem acabou de adotar já cai na tela do bicho novo
@@ -215,14 +317,43 @@ function soltar() {
   irParaLista()
 }
 
+// ============ o relógio do jogo (1 batida por segundo) ============
+function batida() {
+  agora.value = new Date()
+  for (const bicho of bichos.value) {
+    // o ovo choca sozinho depois de um tempinho
+    if (!bicho.chocou) {
+      if (Date.now() - bicho.ovoDesde >= OVO_CHOCA_EM) chocar(bicho)
+      continue
+    }
+    bicho.idade += ritmoDaIdade.value
+
+    if (bicho.luzApagada) {
+      // dormindo: a energia sobe e as outras barras não caem
+      dormirUmPouco(bicho.status, ritmoDasBarras.value)
+      // de dia e descansado, acorda sozinho
+      if (bicho.status.energia >= 100 && !noite.value) bicho.luzApagada = false
+    } else {
+      passarTempoAberto(bicho.status, ritmoDasBarras.value)
+    }
+
+    // doente: a felicidade cai em dobro
+    if (bicho.doente) {
+      bicho.status.felicidade = limitar(bicho.status.felicidade - (100 / (5 * 3600)) * ritmoDasBarras.value)
+    }
+
+    // tempo no vermelho: se passar do limite, adoece
+    const noVermelho = Object.values(bicho.status).some((valor) => valor < VERMELHO_DOENTE)
+    bicho.segundosNoVermelho = noVermelho ? bicho.segundosNoVermelho + ritmoDasBarras.value : 0
+    if (bicho.segundosNoVermelho >= TEMPO_PRA_ADOECER) bicho.doente = true
+  }
+  // anota a hora: se a pessoa fechar o jogo agora, é daqui que conta o tempo fechado
+  localStorage.setItem('ultimaVisita', String(Date.now()))
+}
+
 let relogio = 0
 onMounted(() => {
-  relogio = setInterval(() => {
-    // a cada segundo, todos os bichos sentem o tempo passar (não só o que está aberto)
-    bichos.value.forEach((bicho) => passarTempoAberto(bicho.status, 1))
-    // anota a hora: se a pessoa fechar o jogo agora, é daqui que conta o tempo fechado
-    localStorage.setItem('ultimaVisita', String(Date.now()))
-  }, 1000)
+  relogio = setInterval(batida, 1000)
 })
 onUnmounted(() => {
   clearInterval(relogio)
@@ -239,7 +370,7 @@ watch(
 
 <template>
   <main class="jogo">
-    <!-- o bônus do dia aparece uns segundos, por cima de tudo, sem tapar os botões -->
+    <!-- o bônus do dia aparece uns segundos, em cima, sem tapar os botões -->
     <p v-if="ganhouBonus" class="bonus" role="status">
       <IconePixel nome="biscoito" />
       Bônus do dia: <span class="numero">+{{ BONUS_DO_DIA }}</span> biscoitos!
@@ -249,15 +380,25 @@ watch(
       v-if="tela === 'pet' && bichoAtual !== null"
       :bicho="bichoAtual"
       :biscoitos="biscoitos"
+      :itens-na-mochila="itensNaMochila"
+      :noite="noite"
+      :doente="bichoAtual.doente"
+      :demo="demo"
+      :periodo="periodo"
       @alimentou="quandoAlimentar"
       @limpou-caixinha="quandoLimparCaixinha"
       @brincou="quandoBrincar"
       @apagou-luz="quandoApagarLuz"
+      @acendeu-luz="quandoAcenderLuz"
       @soltou="quandoSoltou"
       @voltou="irParaLista"
       @abriu-loja="lojaAberta = true"
-      :itens-na-mochila="itensNaMochila"
       @abriu-mochila="mochilaAberta = true"
+      @tocou-ovo="quandoTocarNoOvo"
+      @carinho="quandoCarinho"
+      @jogou="quandoJogou"
+      @trocou-demo="demo = $event"
+      @trocou-periodo="periodo = $event"
     />
 
     <ListaPets v-else-if="tela === 'lista'" :bichos="bichos" @abriu="abrir" @adotar="tela = 'criar'" />
@@ -302,7 +443,7 @@ watch(
 .bonus {
   position: fixed;
   left: 50%;
-  bottom: var(--space-6);
+  top: var(--space-4);
   z-index: 10;
   display: flex;
   align-items: center;

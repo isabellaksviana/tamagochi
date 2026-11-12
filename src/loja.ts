@@ -2,13 +2,14 @@ import { barraDa, type Barra } from './barras'
 import type { NomeIcone } from './icones'
 import type { Status } from './tipos'
 
-export type Categoria = 'comida' | 'brinquedo' | 'caixinha' | 'descanso'
+export type Categoria = 'comida' | 'brinquedo' | 'caixinha' | 'descanso' | 'farmacia'
 
 export const CATEGORIAS: { valor: Categoria; rotulo: string; icone: NomeIcone }[] = [
   { valor: 'comida', rotulo: 'Comida', icone: 'tigela' },
   { valor: 'brinquedo', rotulo: 'Brinquedos', icone: 'novelo' },
   { valor: 'caixinha', rotulo: 'Caixinha', icone: 'caixinha' },
   { valor: 'descanso', rotulo: 'Descanso', icone: 'lua' },
+  { valor: 'farmacia', rotulo: 'Farmácia', icone: 'remedio' },
 ]
 
 export type ItemLoja = {
@@ -19,6 +20,8 @@ export type ItemLoja = {
   preco: number
   // quanto cada barra sobe quando o bicho ganha o item
   efeito: Partial<Status>
+  // o remédio: cura a doença
+  cura?: boolean
   icone: NomeIcone
   // a cor do fundinho atrás do desenho
   cor: string
@@ -77,6 +80,17 @@ export const ITENS_DA_LOJA: ItemLoja[] = [
     icone: 'caminha',
     cor: '#a58bd9',
   },
+  {
+    id: 'remedio',
+    nome: 'Remédio',
+    descricao: 'Pra quando a barriguinha (ou o coração) não vai bem.',
+    categoria: 'farmacia',
+    preco: 10,
+    efeito: { felicidade: 10 },
+    cura: true,
+    icone: 'remedio',
+    cor: '#ff8fb0',
+  },
 ]
 
 export function itemPeloId(id: string): ItemLoja | undefined {
@@ -93,7 +107,7 @@ export function efeitosDo(item: ItemLoja): { barra: Barra; quanto: number }[] {
 
 // o efeito em texto: "+50 de fome, +15 de felicidade"
 export function ganhosDo(item: ItemLoja): string {
-  return efeitosDo(item)
-    .map(({ barra, quanto }) => `+${quanto} de ${barra.rotulo.toLowerCase()}`)
-    .join(', ')
+  const textos = efeitosDo(item).map(({ barra, quanto }) => `+${quanto} de ${barra.rotulo.toLowerCase()}`)
+  if (item.cura) textos.unshift('Curado')
+  return textos.join(', ')
 }

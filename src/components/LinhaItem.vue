@@ -18,6 +18,10 @@ defineProps<{
       <span class="descricao">{{ item.descricao }}</span>
       <!-- o que o item faz, antes de gastar os biscoitos: "+50 Fome" -->
       <span class="efeitos" :aria-label="`Efeito: ${efeitosDo(item).map((e) => `+${e.quanto} de ${e.barra.rotulo}`).join(', ')}`">
+        <span v-if="item.cura" class="efeito cura" aria-hidden="true">
+          <IconePixel nome="remedio" />
+          Cura
+        </span>
         <span v-for="efeito in efeitosDo(item)" :key="efeito.barra.chave" class="efeito" :style="{ '--cor': efeito.barra.cor }" aria-hidden="true">
           <IconePixel :nome="efeito.barra.icone" />
           <span class="numero">+{{ efeito.quanto }}</span>
@@ -79,6 +83,10 @@ defineProps<{
   background: color-mix(in srgb, var(--cor) 18%, var(--surface));
   border: 2px solid color-mix(in srgb, var(--cor) 55%, var(--border));
   border-radius: 999px;
+}
+
+.efeito.cura {
+  --cor: var(--danger-text);
 }
 
 .lado {
