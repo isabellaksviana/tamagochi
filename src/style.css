@@ -11,9 +11,29 @@
   --cor-primaria: #b89cff;
   --cor-secundaria: #f6d365;
   --cor-disabled: #d9ccf7;
+  /* o círculo de luz atrás do bicho e o fundo das barras */
+  --cor-brilho: #2a2636;
+  --cor-trilho: #3a3746;
   --raio: 4px;
   --fonte-ui: Inter, system-ui, 'Segoe UI', Roboto, Arial, sans-serif;
   --fonte-mono: ui-monospace, Consolas, monospace;
+}
+
+/* tema claro: segue o sistema de quem joga; usa as cores da folha de personagem */
+@media (prefers-color-scheme: light) {
+  :root {
+    --cor-texto: #5b3a36;
+    --cor-texto-tela: #5b3a36;
+    --cor-texto-suave: #8a6b66;
+    --cor-fundo: #fff6ee;
+    --cor-fundo-afundado: #fbe9e4;
+    --cor-borda: #f2d9d2;
+    --cor-primaria: #ff9fb3;
+    --cor-secundaria: #ffd7b0;
+    --cor-disabled: #f6d6dc;
+    --cor-brilho: #fbe3e8;
+    --cor-trilho: #f2d9d2;
+  }
 }
 
 body {
