@@ -22,20 +22,20 @@ const AVISO_QUANDO_BAIXO: Record<keyof Status, string> = {
 
 // ============ o tempo passando ============
 
-// quanto cada barra cai por segundo com o jogo aberto: 100 ÷ (minutos até esvaziar × 60)
+// quanto cada barra cai por segundo: 100 ÷ (horas até esvaziar × 3600)
+// em horas, como num tamagochi: cuida de manhã, volta à noite e ele está com fome
 const QUEDA_POR_SEGUNDO: Status = {
-  fome: 100 / (8 * 60),
-  felicidade: 100 / (10 * 60),
-  energia: 100 / (12 * 60),
-  higiene: 100 / (15 * 60),
+  fome: 100 / (4 * 3600),
+  felicidade: 100 / (5 * 3600),
+  higiene: 100 / (6 * 3600),
+  energia: 100 / (8 * 3600),
 }
 
 // nenhuma barra chega a zero: no máximo fica "no cheiro" (quase vazia, no vermelho)
 export const MINIMO = 5
 
-// com o jogo fechado, o tempo passa 20 vezes mais devagar...
-const LENTIDAO_FECHADO = 20
-// ...e nunca deixa a barra abaixo disto (o bicho fica carente, mas não no vermelho)
+// com o jogo fechado, o tempo passa no mesmo ritmo, mas nunca deixa a barra abaixo disto
+// (o bicho fica carente, mas não no vermelho)
 const PISO_FECHADO = 40
 
 function chavesDo(status: Status) {
@@ -49,10 +49,10 @@ export function passarTempoAberto(status: Status, segundos: number) {
   }
 }
 
-// jogo fechado: cai devagar e para no piso (se já estava abaixo do piso, fica onde está)
+// jogo fechado: cai no mesmo ritmo e para no piso (se já estava abaixo do piso, fica onde está)
 export function passarTempoFechado(status: Status, segundos: number) {
   for (const chave of chavesDo(status)) {
-    const depois = status[chave] - (QUEDA_POR_SEGUNDO[chave] * segundos) / LENTIDAO_FECHADO
+    const depois = status[chave] - QUEDA_POR_SEGUNDO[chave] * segundos
     const piso = Math.min(status[chave], PISO_FECHADO)
     status[chave] = Math.max(piso, depois)
   }
