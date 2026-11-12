@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { PhCat, PhHeart } from '@phosphor-icons/vue'
+import { PhArrowLeft, PhCat, PhHeart } from '@phosphor-icons/vue'
 import DesenhoBicho from './DesenhoBicho.vue'
 import BotaoTema from './BotaoTema.vue'
 import type { CorGato, Especie } from './bicho/cores'
 
+// sem nenhum bicho ainda, não tem pra onde voltar: o botão some
+defineProps<{
+  podeVoltar: boolean
+}>()
+
 const emit = defineEmits<{
   adotou: [novo: { nome: string; especie: Especie; cor: CorGato }]
+  voltou: []
 }>()
 
 const CORES: { valor: CorGato; rotulo: string }[] = [
@@ -36,7 +42,18 @@ function adotar() {
 <template>
   <section class="criar">
     <header class="topo">
-      <h1>Novo bichinho</h1>
+      <div class="titulo">
+        <button
+          v-if="podeVoltar"
+          class="button so-icone"
+          type="button"
+          aria-label="Voltar para os meus bichinhos"
+          @click="emit('voltou')"
+        >
+          <PhArrowLeft weight="duotone" aria-hidden="true" />
+        </button>
+        <h1>Novo bichinho</h1>
+      </div>
       <BotaoTema />
     </header>
 
@@ -106,6 +123,12 @@ function adotar() {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.titulo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
 }
 
 .topo h1 {

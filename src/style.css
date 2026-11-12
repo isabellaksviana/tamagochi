@@ -135,6 +135,12 @@ input:focus-visible {
   flex-shrink: 0;
 }
 
+/* botão só com ícone: quadrado, do tamanho da altura */
+.button.so-icone {
+  width: 2.6875rem;
+  padding: 0;
+}
+
 .button:disabled {
   opacity: 45%;
   cursor: not-allowed;

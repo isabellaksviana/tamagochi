@@ -1,9 +1,19 @@
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
-import { PhBowlFood, PhCookie, PhDrop, PhHandWaving, PhHeart, PhLightning, PhStorefront, PhYarn } from '@phosphor-icons/vue'
+import {
+  PhArrowLeft,
+  PhBowlFood,
+  PhCookie,
+  PhDrop,
+  PhHandWaving,
+  PhHeart,
+  PhLightning,
+  PhStorefront,
+  PhYarn,
+} from '@phosphor-icons/vue'
 import DesenhoBicho from './DesenhoBicho.vue'
 import BotaoTema from './BotaoTema.vue'
-import type { Expressao } from './bicho/cores'
+import { expressaoDo, LIMITE_BAIXO } from '../regras'
 import type { Bicho, Status } from '../tipos'
 
 const props = defineProps<{
@@ -15,6 +25,7 @@ const emit = defineEmits<{
   comeu: []
   brincou: []
   soltou: []
+  voltou: []
 }>()
 
 // as 4 barras, na ordem em que aparecem
@@ -25,27 +36,8 @@ const BARRAS: { chave: keyof Status; rotulo: string; icone: Component; cor: stri
   { chave: 'energia', rotulo: 'Energia', icone: PhLightning, cor: '#f6d365' },
 ]
 
-// abaixo disso, a barra fica vermelha e a cara do bicho muda
-const LIMITE_BAIXO = 30
-
-// a cara que cada status faz quando está baixo
-const CARA_QUANDO_BAIXO: Record<keyof Status, Expressao> = {
-  fome: 'bravo',
-  higiene: 'neutro',
-  felicidade: 'triste',
-  energia: 'dormindo',
-}
-
-// a carinha segue o pior status; se nenhum estiver baixo, ele fica feliz
-const expressao = computed<Expressao>(() => {
-  const status = props.bicho.status
-  const chaves = BARRAS.map((barra) => barra.chave)
-  const pior = chaves.reduce((a, b) => (status[a] <= status[b] ? a : b))
-  if (status[pior] < LIMITE_BAIXO) {
-    return CARA_QUANDO_BAIXO[pior]
-  }
-  return 'feliz'
-})
+// a regra da carinha mora em regras.ts, porque a lista usa a mesma
+const expressao = computed(() => expressaoDo(props.bicho.status))
 
 // o bichinho não mexe nos status: só avisa o que aconteceu
 function alimentar() {
@@ -64,11 +56,16 @@ function excluir() {
 <template>
   <section class="tela">
     <header class="topo">
-      <!-- a loja ainda não existe: fica desligada até a parte dos biscoitos -->
-      <button class="button" type="button" disabled title="Em breve">
+      <div class="esquerda">
+        <button class="button so-icone" type="button" aria-label="Voltar para os meus bichinhos" @click="emit('voltou')">
+          <PhArrowLeft weight="duotone" aria-hidden="true" />
+        </button>
+        <!-- a loja ainda não existe: fica desligada até a parte dos biscoitos -->
+        <button class="button" type="button" disabled title="Em breve">
         <PhStorefront weight="duotone" aria-hidden="true" />
-        Loja
-      </button>
+          Loja
+        </button>
+      </div>
       <div class="direita">
         <span class="contador" :aria-label="`${biscoitos} biscoitos`">
           <PhCookie weight="duotone" aria-hidden="true" class="icone-biscoito" />
@@ -140,6 +137,7 @@ function excluir() {
   align-items: center;
 }
 
+.esquerda,
 .direita {
   display: flex;
   align-items: center;

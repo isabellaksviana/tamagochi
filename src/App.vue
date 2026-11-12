@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import Tamagochi from './components/Tamagochi.vue'
 import Modal from './components/Modal.vue'
 import CriarPet from './components/CriarPet.vue'
+import ListaPets from './components/ListaPets.vue'
 import type { CorGato, Especie } from './components/bicho/cores'
 import type { Bicho } from './tipos'
 
@@ -44,8 +45,24 @@ const idSalvo = localStorage.getItem('proximoId')
 let proximoId = idSalvo ? Number(idSalvo) : 1
 const bichoSoltando = ref<Bicho | null>(null)
 
-// a tela mostra um bicho só; por enquanto é o primeiro (trocar entre eles vem depois)
-const bichoAtual = computed(() => bichos.value[0] ?? null)
+// qual tela aparece: sem bicho nenhum, começa na de criar
+type Tela = 'lista' | 'criar' | 'pet'
+const tela = ref<Tela>(bichos.value.length === 0 ? 'criar' : 'lista')
+
+// qual bicho está aberto na tela do pet (pelo id, não pela posição na lista)
+const idAberto = ref<number | null>(null)
+const bichoAtual = computed(() => bichos.value.find((bicho) => bicho.id === idAberto.value) ?? null)
+
+function abrir(id: number) {
+  idAberto.value = id
+  tela.value = 'pet'
+}
+
+// voltar sempre leva pra lista; se não sobrou bicho, vai pra de criar
+function irParaLista() {
+  idAberto.value = null
+  tela.value = bichos.value.length === 0 ? 'criar' : 'lista'
+}
 
 function quandoComer() {
   const bicho = bichoAtual.value
@@ -71,8 +88,9 @@ function quandoSoltou() {
 
 // a tela de criar manda o que a pessoa escolheu; aqui o bicho ganha id e status
 function adotar(novo: { nome: string; especie: Especie; cor: CorGato }) {
+  const id = proximoId
   bichos.value.unshift({
-    id: proximoId,
+    id,
     nome: novo.nome,
     especie: novo.especie,
     cor: novo.cor,
@@ -80,6 +98,8 @@ function adotar(novo: { nome: string; especie: Especie; cor: CorGato }) {
   })
   proximoId++
   localStorage.setItem('proximoId', String(proximoId))
+  // quem acabou de adotar já cai na tela do bicho novo
+  abrir(id)
 }
 
 function cancelar() {
@@ -93,6 +113,7 @@ function soltar() {
   }
   bichos.value = bichos.value.filter((b) => b.id !== bicho.id)
   bichoSoltando.value = null
+  irParaLista()
 }
 
 watch(
@@ -107,15 +128,18 @@ watch(
 <template>
   <main class="jogo">
     <Tamagochi
-      v-if="bichoAtual !== null"
+      v-if="tela === 'pet' && bichoAtual !== null"
       :bicho="bichoAtual"
       :biscoitos="0"
       @comeu="quandoComer"
       @brincou="quandoBrincar"
       @soltou="quandoSoltou"
+      @voltou="irParaLista"
     />
 
-    <CriarPet v-else @adotou="adotar" />
+    <ListaPets v-else-if="tela === 'lista'" :bichos="bichos" @abriu="abrir" @adotar="tela = 'criar'" />
+
+    <CriarPet v-else :pode-voltar="bichos.length > 0" @adotou="adotar" @voltou="irParaLista" />
 
     <Modal v-if="bichoSoltando !== null">
       <p>Tem certeza que quer soltar {{ bichoSoltando.nome }}?</p>
