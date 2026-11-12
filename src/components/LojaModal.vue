@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { PhCheck, PhCookie, PhShoppingCart } from '@phosphor-icons/vue'
+import { computed, ref } from 'vue'
 import Janela from './Janela.vue'
 import LinhaItem from './LinhaItem.vue'
 import DesenhoBicho from './DesenhoBicho.vue'
+import IconePixel from './IconePixel.vue'
 import { useConfirmacao } from '../composables/useConfirmacao'
-import { ITENS_DA_LOJA, type ItemLoja } from '../loja'
+import { CATEGORIAS, ITENS_DA_LOJA, type Categoria, type ItemLoja } from '../loja'
 import type { Bicho } from '../tipos'
 
 defineProps<{
@@ -18,6 +19,12 @@ const emit = defineEmits<{
   fechou: []
 }>()
 
+// a categoria escolhida nas abinhas ("tudo" mostra a loja inteira)
+const categoria = ref<Categoria | 'tudo'>('tudo')
+const itens = computed(() =>
+  categoria.value === 'tudo' ? ITENS_DA_LOJA : ITENS_DA_LOJA.filter((item) => item.categoria === categoria.value),
+)
+
 const { idConfirmado, mensagem, confirmar } = useConfirmacao()
 
 function comprar(item: ItemLoja) {
@@ -29,26 +36,41 @@ function comprar(item: ItemLoja) {
 <template>
   <Janela titulo="Lojinha" subtitulo="Tudo vai para a sua mochila" @fechou="emit('fechou')">
     <template #icone>
-      <DesenhoBicho :especie="bicho.especie" :cor="bicho.cor" expressao="feliz" />
+      <DesenhoBicho :especie="bicho.especie" :cor="bicho.cor" expressao="feliz" so-cabeca />
     </template>
     <template #extra>
       <span class="carteira" :aria-label="`${biscoitos} biscoitos`">
-        <PhCookie weight="duotone" aria-hidden="true" />
-        {{ biscoitos }}
+        <IconePixel nome="biscoito" />
+        <span class="numero">{{ biscoitos }}</span>
       </span>
     </template>
 
+    <div class="abas" role="group" aria-label="Categorias">
+      <button class="aba" type="button" :aria-pressed="categoria === 'tudo'" @click="categoria = 'tudo'">Tudo</button>
+      <button
+        v-for="opcao in CATEGORIAS"
+        :key="opcao.valor"
+        class="aba"
+        type="button"
+        :aria-pressed="categoria === opcao.valor"
+        @click="categoria = opcao.valor"
+      >
+        <IconePixel :nome="opcao.icone" />
+        {{ opcao.rotulo }}
+      </button>
+    </div>
+
     <!-- role="status": o leitor de tela anuncia a mensagem sozinho quando ela muda -->
-    <p class="confirmacao" :class="{ visivel: mensagem !== '' }" role="status">
-      <PhCheck v-if="mensagem !== ''" weight="bold" aria-hidden="true" />
+    <p v-if="mensagem !== ''" class="confirmacao" role="status">
+      <IconePixel nome="certo" />
       {{ mensagem }}
     </p>
 
     <ul class="itens">
-      <LinhaItem v-for="item in ITENS_DA_LOJA" :key="item.id" :item="item">
+      <LinhaItem v-for="item in itens" :key="item.id" :item="item">
         <span class="pilula" :aria-label="`${item.preco} biscoitos`">
-          <PhCookie weight="duotone" aria-hidden="true" />
-          {{ item.preco }}
+          <IconePixel nome="biscoito" />
+          <span class="numero">{{ item.preco }}</span>
         </span>
         <button
           class="button button-primary"
@@ -59,13 +81,10 @@ function comprar(item: ItemLoja) {
           @click="comprar(item)"
         >
           <template v-if="idConfirmado === item.id">
-            <PhCheck weight="bold" aria-hidden="true" />
+            <IconePixel nome="certo" />
             Comprado!
           </template>
-          <template v-else>
-            <PhShoppingCart weight="duotone" aria-hidden="true" />
-            Comprar
-          </template>
+          <template v-else>Comprar</template>
         </button>
       </LinhaItem>
     </ul>
@@ -76,19 +95,53 @@ function comprar(item: ItemLoja) {
 .carteira {
   display: inline-flex;
   align-items: center;
-  gap: 0.375rem;
-  min-height: 2.6875rem;
+  gap: 0.5rem;
+  min-height: 2.75rem;
   padding: 0 var(--space-3);
-  font-weight: 700;
   background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 999px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
 }
 
-.carteira svg {
-  width: 1.125rem;
-  height: 1.125rem;
-  color: #d9a15b;
+/* as abinhas de categoria: rolam de lado no celular, em vez de quebrar linha */
+.abas {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.aba {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 2.25rem;
+  padding: 0 var(--space-3);
+  font: inherit;
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.aba:hover {
+  background: var(--surface-strong);
+}
+
+.aba[aria-pressed='true'] {
+  color: var(--text);
+  background: var(--primary-soft);
+  border-color: var(--primary);
+}
+
+.aba:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .itens {

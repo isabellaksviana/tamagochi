@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { PhCheck, PhGift, PhStorefront } from '@phosphor-icons/vue'
 import Janela from './Janela.vue'
 import LinhaItem from './LinhaItem.vue'
 import DesenhoBicho from './DesenhoBicho.vue'
+import IconePixel from './IconePixel.vue'
 import { useConfirmacao } from '../composables/useConfirmacao'
 import { ganhosDo, itemPeloId, type ItemLoja } from '../loja'
 import type { Bicho } from '../tipos'
@@ -40,17 +40,20 @@ function dar(item: ItemLoja) {
 <template>
   <Janela titulo="Mochila" :subtitulo="`Escolha um mimo para ${bicho.nome}`" @fechou="emit('fechou')">
     <template #icone>
-      <DesenhoBicho :especie="bicho.especie" :cor="bicho.cor" expressao="carinhoso" />
+      <DesenhoBicho :especie="bicho.especie" :cor="bicho.cor" expressao="carinhoso" so-cabeca />
     </template>
 
-    <p class="confirmacao" :class="{ visivel: mensagem !== '' }" role="status">
-      <PhCheck v-if="mensagem !== ''" weight="bold" aria-hidden="true" />
+    <!-- o aviso fica até o próximo mimo (ou até fechar), mesmo se a mochila esvaziar -->
+    <p v-if="mensagem !== ''" class="confirmacao" role="status">
+      <IconePixel nome="certo" />
       {{ mensagem }}
     </p>
 
     <ul v-if="guardados.length > 0" class="itens">
       <LinhaItem v-for="guardado in guardados" :key="guardado.item.id" :item="guardado.item">
-        <span class="pilula" :aria-label="`${guardado.quantos} na mochila`">× {{ guardado.quantos }}</span>
+        <span class="pilula" :aria-label="`${guardado.quantos} na mochila`">
+          × <span class="numero">{{ guardado.quantos }}</span>
+        </span>
         <button
           class="button button-primary"
           :class="{ confirmado: idConfirmado === guardado.item.id }"
@@ -59,13 +62,10 @@ function dar(item: ItemLoja) {
           @click="dar(guardado.item)"
         >
           <template v-if="idConfirmado === guardado.item.id">
-            <PhCheck weight="bold" aria-hidden="true" />
+            <IconePixel nome="certo" />
             Dado!
           </template>
-          <template v-else>
-            <PhGift weight="duotone" aria-hidden="true" />
-            Dar
-          </template>
+          <template v-else>Dar</template>
         </button>
       </LinhaItem>
     </ul>
@@ -74,7 +74,7 @@ function dar(item: ItemLoja) {
     <div v-else class="vazia">
       <p>A mochila está vazia.</p>
       <button class="button button-primary" type="button" @click="emit('irParaLoja')">
-        <PhStorefront weight="duotone" aria-hidden="true" />
+        <IconePixel nome="biscoito" />
         Ir para a Lojinha
       </button>
     </div>

@@ -3,6 +3,7 @@ import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import Tamagochi from './components/Tamagochi.vue'
 import Janela from './components/Janela.vue'
 import DesenhoBicho from './components/DesenhoBicho.vue'
+import IconePixel from './components/IconePixel.vue'
 import CriarPet from './components/CriarPet.vue'
 import ListaPets from './components/ListaPets.vue'
 import type { CorGato, Especie } from './components/bicho/cores'
@@ -85,8 +86,20 @@ function irParaLista() {
 const biscoitos = ref(Number(localStorage.getItem('biscoitos') ?? 0))
 watch(biscoitos, (quantos) => localStorage.setItem('biscoitos', String(quantos)))
 
-// abaixo disso, a barra "estava precisando": cuidar dela rende biscoito
-const PRECISANDO = 90
+// abaixo disso, a barra "estava precisando de verdade": só aí cuidar rende biscoito
+// (biscoito custa a ganhar, pra loja e os pets raros terem valor)
+const PRECISANDO = 50
+
+// bônus do dia: a primeira visita de cada dia ganha alguns biscoitos
+const BONUS_DO_DIA = 5
+const hoje = new Date().toLocaleDateString('pt-BR')
+const ganhouBonus = ref(false)
+if (localStorage.getItem('ultimoBonus') !== hoje) {
+  biscoitos.value += BONUS_DO_DIA
+  localStorage.setItem('ultimoBonus', hoje)
+  ganhouBonus.value = true
+  setTimeout(() => (ganhouBonus.value = false), 6000)
+}
 
 // sobe uma barra do bicho aberto; se ela estava precisando, ganha 1 biscoito
 function cuidar(chave: keyof Status, quanto: number) {
@@ -130,6 +143,11 @@ const mochilaAberta = ref(false)
 // a mochila é de quem joga (como os biscoitos): quantos de cada item, { sache: 2, bolinha: 1 }
 const mochilaSalva = localStorage.getItem('mochila')
 const mochila = ref<Record<string, number>>(mochilaSalva ? JSON.parse(mochilaSalva) : {})
+// o sabonete saiu da loja (gato não toma banho): quem tinha ganha a mesma quantidade de areia
+if (mochila.value.sabonete) {
+  mochila.value.areia = (mochila.value.areia ?? 0) + mochila.value.sabonete
+  delete mochila.value.sabonete
+}
 watch(mochila, (agora) => localStorage.setItem('mochila', JSON.stringify(agora)), { deep: true })
 
 // comprar: paga e guarda na mochila (depois a pessoa escolhe pra quem dar)
@@ -221,6 +239,12 @@ watch(
 
 <template>
   <main class="jogo">
+    <!-- o bônus do dia aparece uns segundos, por cima de tudo, sem tapar os botões -->
+    <p v-if="ganhouBonus" class="bonus" role="status">
+      <IconePixel nome="biscoito" />
+      Bônus do dia: <span class="numero">+{{ BONUS_DO_DIA }}</span> biscoitos!
+    </p>
+
     <Tamagochi
       v-if="tela === 'pet' && bichoAtual !== null"
       :bicho="bichoAtual"
@@ -275,6 +299,26 @@ watch(
 </template>
 
 <style scoped>
+.bonus {
+  position: fixed;
+  left: 50%;
+  bottom: var(--space-6);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--text);
+  background: var(--surface);
+  border: 2px solid var(--primary);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.25);
+  transform: translateX(-50%);
+}
+
 .aviso-soltar {
   margin: 0 0 var(--space-5);
   color: var(--text-muted);

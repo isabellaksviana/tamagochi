@@ -208,39 +208,21 @@ h2 {
 }
 
 /* ============ Confirmação ("deu certo!") ============
-   A faixa verde da loja e da mochila, e o botão que vira "Comprado!" / "Dado!". */
-/* flutua por cima do começo da lista (não reserva espaço, então não deixa buraco nem faz a lista pular),
-   e o sticky deixa ela à vista mesmo com a lista rolada */
+   O aviso da loja e da mochila, e o botão que vira "Comprado!" / "Dado!".
+   O aviso fica no lugar dele, em cima da lista (não cobre nenhum item),
+   e só sai na próxima compra ou quando a janela fecha. */
 .confirmacao {
-  position: sticky;
-  top: 0;
-  z-index: 1;
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  min-height: 2.5rem;
-  margin: 0 0 -2.5rem;
-  padding: 0 var(--space-3);
+  margin: 0 0 var(--space-3);
+  padding: var(--space-2) var(--space-3);
   font-weight: 600;
   font-size: var(--font-size-sm);
   color: var(--success);
   background: var(--success-soft);
-  border: 1px solid var(--success);
-  border-radius: var(--radius-md);
-  box-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s;
-}
-
-.confirmacao.visivel {
-  opacity: 1;
-}
-
-.confirmacao svg {
-  flex-shrink: 0;
-  width: 1rem;
-  height: 1rem;
+  border: 2px solid var(--success);
+  border-radius: var(--radius-lg);
 }
 
 .button.confirmado,

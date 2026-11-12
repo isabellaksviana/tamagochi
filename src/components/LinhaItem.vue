@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import type { ItemLoja } from '../loja'
+import IconePixel from './IconePixel.vue'
+import { efeitosDo, type ItemLoja } from '../loja'
 
-// uma linha de item (na loja e na mochila): desenho, nome, descrição e, à direita, o que vier no slot
+// uma linha de item (na loja e na mochila): desenho, nome, o que ele faz e, à direita, o que vier no slot
 defineProps<{
   item: ItemLoja
 }>()
@@ -9,13 +10,20 @@ defineProps<{
 
 <template>
   <li class="linha" :style="{ '--cor-item': item.cor }">
-    <!-- aqui vai entrar a ilustração do item; por enquanto, o ícone -->
     <span class="vitrine">
-      <component :is="item.icone" weight="duotone" aria-hidden="true" />
+      <IconePixel :nome="item.icone" :escala="4" />
     </span>
     <span class="texto">
       <strong>{{ item.nome }}</strong>
-      <span>{{ item.descricao }}</span>
+      <span class="descricao">{{ item.descricao }}</span>
+      <!-- o que o item faz, antes de gastar os biscoitos: "+50 Fome" -->
+      <span class="efeitos" :aria-label="`Efeito: ${efeitosDo(item).map((e) => `+${e.quanto} de ${e.barra.rotulo}`).join(', ')}`">
+        <span v-for="efeito in efeitosDo(item)" :key="efeito.barra.chave" class="efeito" :style="{ '--cor': efeito.barra.cor }" aria-hidden="true">
+          <IconePixel :nome="efeito.barra.icone" />
+          <span class="numero">+{{ efeito.quanto }}</span>
+          {{ efeito.barra.rotulo }}
+        </span>
+      </span>
     </span>
     <span class="lado">
       <slot />
@@ -31,8 +39,8 @@ defineProps<{
   gap: var(--space-3);
   padding: var(--space-3);
   background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border: 2px solid var(--border);
+  border-radius: 16px;
 }
 
 .vitrine {
@@ -40,14 +48,8 @@ defineProps<{
   place-items: center;
   width: 4rem;
   height: 4rem;
-  color: var(--cor-item);
-  background: color-mix(in srgb, var(--cor-item) 18%, transparent);
+  background: color-mix(in srgb, var(--cor-item) 22%, transparent);
   border-radius: var(--radius-lg);
-}
-
-.vitrine svg {
-  width: 2rem;
-  height: 2rem;
 }
 
 .texto {
@@ -55,9 +57,28 @@ defineProps<{
   gap: 2px;
 }
 
-.texto span {
+.descricao {
   font-size: var(--font-size-sm);
   color: var(--text-muted);
+}
+
+.efeitos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+}
+
+.efeito {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 2px var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  background: color-mix(in srgb, var(--cor) 18%, var(--surface));
+  border: 2px solid color-mix(in srgb, var(--cor) 55%, var(--border));
+  border-radius: 999px;
 }
 
 .lado {
@@ -73,16 +94,9 @@ defineProps<{
   gap: 0.375rem;
   min-height: 2.25rem;
   padding: 0 var(--space-3);
-  font-weight: 700;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: 999px;
-}
-
-:slotted(.pilula svg) {
-  width: 1.125rem;
-  height: 1.125rem;
-  color: #d9a15b;
 }
 
 /* janela estreita (celular): o lado desce pra baixo do texto e o botão estica */
