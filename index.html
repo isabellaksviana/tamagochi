@@ -5,6 +5,13 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tamagochi</title>
+    <script>
+      // escolhe o tema antes de a página aparecer (senão ela pisca no tema errado):
+      // o que a pessoa escolheu no botão; se nunca escolheu, o do sistema
+      const temaSalvo = localStorage.getItem('tema')
+      const sistemaClaro = matchMedia('(prefers-color-scheme: light)').matches
+      document.documentElement.dataset.theme = temaSalvo ?? (sistemaClaro ? 'light' : 'dark')
+    </script>
   </head>
   <body>
     <div id="app"></div>

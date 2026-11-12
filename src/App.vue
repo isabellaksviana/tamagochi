@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import Tamagochi from './components/Tamagochi.vue'
 import Modal from './components/Modal.vue'
+import BotaoTema from './components/BotaoTema.vue'
 import type { Bicho } from './tipos'
 
 // a versão antiga salvava só isto (e a fome ia de 0 a 5, com 0 = satisfeito)
@@ -118,11 +119,14 @@ watch(
     />
 
     <section v-else class="sem-bicho">
-      <h1>Tamagochi</h1>
+      <header class="cabecalho">
+        <h1>Tamagochi</h1>
+        <BotaoTema />
+      </header>
       <p>☹️ Nenhum bichinho por aqui. Adote um!</p>
       <div class="adotar">
         <input v-model="novoNome" placeholder="Dê um nome para adotar" @keyup.enter="adotar" />
-        <button @click="adotar" :disabled="novoNome.trim() === ''">Adotar</button>
+        <button class="button button-primary" @click="adotar" :disabled="novoNome.trim() === ''">Adotar</button>
       </div>
     </section>
 
@@ -130,8 +134,8 @@ watch(
       <p>Tem certeza que quer soltar {{ bichoSoltando.nome }}?</p>
 
       <div class="acoes">
-        <button @click="cancelar">Cancelar</button>
-        <button @click="soltar">Soltar</button>
+        <button class="button" @click="cancelar">Cancelar</button>
+        <button class="button button-danger" @click="soltar">Soltar</button>
       </div>
     </Modal>
   </main>
@@ -145,45 +149,29 @@ watch(
 
 .sem-bicho {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
+}
+
+.cabecalho {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .acoes {
   display: flex;
-  gap: 10px;
+  gap: var(--space-3);
   justify-content: end;
-}
-
-.acoes button,
-.adotar button {
-  padding: 8px 16px;
-  font: inherit;
-  color: var(--cor-texto);
-  background: var(--cor-primaria);
-  border: none;
-  border-radius: var(--raio);
-  cursor: pointer;
-}
-
-.acoes button:hover,
-.adotar button:hover {
-  background: var(--cor-secundaria);
 }
 
 .adotar {
   display: flex;
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 /* o campo estica e ocupa o espaço que sobra do botão */
 .adotar input {
   flex: 1;
   min-width: 0;
-}
-
-.adotar button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  background: var(--cor-disabled);
 }
 </style>

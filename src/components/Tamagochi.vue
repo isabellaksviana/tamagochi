@@ -2,6 +2,7 @@
 import { computed, type Component } from 'vue'
 import { PhBowlFood, PhCookie, PhDrop, PhHandWaving, PhHeart, PhLightning, PhStorefront, PhYarn } from '@phosphor-icons/vue'
 import DesenhoBicho from './DesenhoBicho.vue'
+import BotaoTema from './BotaoTema.vue'
 import type { Expressao } from './bicho/cores'
 import type { Bicho, Status } from '../tipos'
 
@@ -64,14 +65,17 @@ function excluir() {
   <section class="tela">
     <header class="topo">
       <!-- a loja ainda não existe: fica desligada até a parte dos biscoitos -->
-      <button class="pilula" type="button" disabled title="Em breve">
-        <PhStorefront weight="duotone" :size="22" class="icone-loja" />
+      <button class="button" type="button" disabled title="Em breve">
+        <PhStorefront weight="duotone" aria-hidden="true" />
         Loja
       </button>
-      <span class="pilula" :aria-label="`${biscoitos} biscoitos`">
-        <PhCookie weight="duotone" :size="22" class="icone-biscoito" />
-        {{ biscoitos }}
-      </span>
+      <div class="direita">
+        <span class="contador" :aria-label="`${biscoitos} biscoitos`">
+          <PhCookie weight="duotone" aria-hidden="true" class="icone-biscoito" />
+          {{ biscoitos }}
+        </span>
+        <BotaoTema />
+      </div>
     </header>
 
     <h1 class="nome">{{ bicho.nome }}</h1>
@@ -106,15 +110,15 @@ function excluir() {
 
     <div class="acoes">
       <button class="acao" type="button" @click="alimentar" :disabled="bicho.status.fome === 100">
-        <span class="circulo"><PhBowlFood weight="duotone" :size="30" /></span>
+        <span class="circulo"><PhBowlFood weight="duotone" :size="30" aria-hidden="true" /></span>
         Alimentar
       </button>
       <button class="acao" type="button" @click="brincar" :disabled="bicho.status.energia === 0">
-        <span class="circulo"><PhYarn weight="duotone" :size="30" /></span>
+        <span class="circulo"><PhYarn weight="duotone" :size="30" aria-hidden="true" /></span>
         Brincar
       </button>
       <button class="acao soltar" type="button" @click="excluir">
-        <span class="circulo"><PhHandWaving weight="duotone" :size="30" /></span>
+        <span class="circulo"><PhHandWaving weight="duotone" :size="30" aria-hidden="true" /></span>
         Soltar
       </button>
     </div>
@@ -134,26 +138,29 @@ function excluir() {
   align-items: center;
 }
 
-.pilula {
+.direita {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* não é botão, só mostra quantos biscoitos tem: mesma altura, borda e canto do botão */
+.contador {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  font: inherit;
-  font-weight: 700;
-  color: var(--cor-texto-tela);
-  background: var(--cor-fundo-afundado);
-  border: 1px solid var(--cor-borda);
-  border-radius: 999px;
+  gap: 0.4375rem;
+  min-height: 2.6875rem;
+  padding: 0 var(--space-3);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
 }
 
-button.pilula:disabled {
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-.icone-loja {
-  color: var(--cor-primaria);
+.contador svg {
+  width: 1rem;
+  height: 1rem;
 }
 
 .icone-biscoito {
@@ -173,7 +180,7 @@ button.pilula:disabled {
   width: min(300px, 80vw);
   aspect-ratio: 1;
   margin: 0 auto;
-  background: radial-gradient(closest-side, var(--cor-brilho) 0 92%, transparent 93%);
+  background: radial-gradient(closest-side, var(--primary-soft) 0 92%, transparent 93%);
 }
 
 .desenho {
@@ -210,7 +217,7 @@ button.pilula:disabled {
 .trilho {
   height: 12px;
   overflow: hidden;
-  background: var(--cor-trilho);
+  background: var(--surface-strong);
   border-radius: 999px;
 }
 
@@ -223,7 +230,7 @@ button.pilula:disabled {
 
 /* status baixo: barra e ícone ficam vermelhos (o !important vence a cor que vem no style) */
 .baixa {
-  --cor: #e5484d !important;
+  --cor: var(--danger-text) !important;
 }
 
 .acoes {
@@ -231,51 +238,53 @@ button.pilula:disabled {
   justify-content: space-around;
 }
 
+/* botões redondos do jogo, com a legenda embaixo (não são o Button do DS, de propósito) */
 .acao {
   display: grid;
   justify-items: center;
-  gap: 6px;
-  padding: 4px;
+  gap: var(--space-2);
+  padding: var(--space-1);
   font: inherit;
   font-weight: 600;
-  color: var(--cor-texto-suave);
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
   background: none;
   border: none;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
 }
 
 .circulo {
   display: grid;
   place-items: center;
-  width: 62px;
-  height: 62px;
-  color: var(--cor-texto);
-  background: var(--cor-primaria);
+  width: 3.875rem;
+  height: 3.875rem;
+  color: var(--on-primary);
+  background: var(--primary);
   border-radius: 50%;
 }
 
 .acao:hover:not(:disabled) .circulo {
-  background: var(--cor-secundaria);
+  filter: brightness(1.08);
 }
 
 .acao:focus-visible {
-  outline: 2px solid var(--cor-primaria);
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
 
 .acao:disabled {
   cursor: not-allowed;
-  opacity: 0.5;
+  opacity: 45%;
 }
 
 .soltar .circulo {
-  color: var(--cor-texto-suave);
+  color: var(--text-muted);
   background: transparent;
-  border: 1px solid var(--cor-borda);
+  border: 1px solid var(--border);
 }
 
 .acao.soltar:hover .circulo {
-  background: var(--cor-fundo-afundado);
+  background: var(--surface);
 }
 </style>
