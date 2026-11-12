@@ -4,7 +4,8 @@ import DesenhoBicho from './DesenhoBicho.vue'
 import BotaoTema from './BotaoTema.vue'
 import IconePixel from './IconePixel.vue'
 import { BARRAS } from '../barras'
-import { expressaoDo, LIMITE_BAIXO, MINIMO } from '../regras'
+import { CAIXINHA_SUJA, expressaoDo, LIMITE_BAIXO, MINIMO } from '../regras'
+import type { Expressao } from './bicho/cores'
 import type { Bicho } from '../tipos'
 
 const props = defineProps<{
@@ -13,19 +14,58 @@ const props = defineProps<{
   itensNaMochila: number
 }>()
 
+// os botões são o que VOCÊ faz pelo gato (quem joga cuida, não é o gato)
 const emit = defineEmits<{
-  comeu: []
-  seLambeu: []
+  alimentou: []
+  limpouCaixinha: []
   brincou: []
-  dormiu: []
+  apagouLuz: []
   soltou: []
   voltou: []
   abriuLoja: []
   abriuMochila: []
 }>()
 
-// a regra da carinha mora em regras.ts, porque a lista usa a mesma
-const expressao = computed(() => expressaoDo(props.bicho.status))
+// ============ reação no visor ============
+// logo depois de um cuidado, o gato reage por um instante (e a luz apagada escurece a telinha)
+const reacao = ref<Expressao | null>(null)
+const luzApagada = ref(false)
+let relogioDaReacao = 0
+
+function reagir(expressao: Expressao, segundos: number, apagarLuz = false) {
+  reacao.value = expressao
+  luzApagada.value = apagarLuz
+  clearTimeout(relogioDaReacao)
+  relogioDaReacao = setTimeout(() => {
+    reacao.value = null
+    luzApagada.value = false
+  }, segundos * 1000)
+}
+
+function alimentar() {
+  emit('alimentou')
+  reagir('carinhoso', 2)
+}
+
+function limparCaixinha() {
+  emit('limpouCaixinha')
+  reagir('feliz', 2)
+}
+
+function brincar() {
+  emit('brincou')
+  reagir('feliz', 2)
+}
+
+function apagarLuz() {
+  emit('apagouLuz')
+  reagir('dormindo', 4, true)
+}
+
+// a regra da carinha mora em regras.ts, porque a lista usa a mesma; a reação passa na frente
+const expressao = computed(() => reacao.value ?? expressaoDo(props.bicho.status))
+
+const caixinhaSuja = computed(() => props.bicho.status.higiene < CAIXINHA_SUJA)
 
 // cada barra vira 10 bloquinhos: quantos estão acesos
 function blocosAcesos(valor: number) {
@@ -48,6 +88,7 @@ onMounted(() => {
 })
 onUnmounted(() => {
   clearInterval(relogio)
+  clearTimeout(relogioDaReacao)
 })
 </script>
 
@@ -90,12 +131,16 @@ onUnmounted(() => {
     <h1 class="nome">{{ bicho.nome }}</h1>
 
     <!-- a telinha de LCD: pontinhos, bateria (a energia) e a hora, como no aparelhinho -->
-    <div class="visor">
+    <div class="visor" :class="{ apagado: luzApagada }">
       <span class="bateria" :aria-label="`Energia: ${risquinhosDaBateria} de 3`">
         <i v-for="n in 3" :key="n" :class="{ acesa: n <= risquinhosDaBateria }" />
       </span>
       <span class="hora numero">{{ hora }}</span>
       <DesenhoBicho class="desenho" :especie="bicho.especie" :cor="bicho.cor" :expressao="expressao" />
+      <!-- a caixinha de areia do canto: suja quando a higiene cai (o "cocô" do tamagochi) -->
+      <span class="caixinha" :title="caixinhaSuja ? 'A caixinha está suja' : 'Caixinha limpinha'">
+        <IconePixel :nome="caixinhaSuja ? 'caixinhaSuja' : 'caixinha'" :escala="3" />
+      </span>
       <span class="chao" />
     </div>
 
@@ -124,21 +169,21 @@ onUnmounted(() => {
     </ul>
 
     <div class="acoes">
-      <button class="acao" type="button" @click="emit('comeu')" :disabled="bicho.status.fome === 100">
+      <button class="acao" type="button" @click="alimentar" :disabled="bicho.status.fome === 100">
         <span class="circulo"><IconePixel nome="tigela" :escala="3" /></span>
         Alimentar
       </button>
-      <button class="acao" type="button" @click="emit('seLambeu')" :disabled="bicho.status.higiene === 100">
-        <span class="circulo"><IconePixel nome="gota" :escala="3" /></span>
-        Se lamber
+      <button class="acao" type="button" @click="limparCaixinha" :disabled="bicho.status.higiene === 100">
+        <span class="circulo"><IconePixel nome="caixinha" :escala="3" /></span>
+        Limpar caixinha
       </button>
-      <button class="acao" type="button" @click="emit('brincou')" :disabled="bicho.status.energia <= MINIMO">
+      <button class="acao" type="button" @click="brincar" :disabled="bicho.status.energia <= MINIMO">
         <span class="circulo"><IconePixel nome="novelo" :escala="3" /></span>
         Brincar
       </button>
-      <button class="acao" type="button" @click="emit('dormiu')" :disabled="bicho.status.energia === 100">
-        <span class="circulo"><IconePixel nome="lua" :escala="3" /></span>
-        Dormir
+      <button class="acao" type="button" @click="apagarLuz" :disabled="bicho.status.energia === 100">
+        <span class="circulo"><IconePixel nome="lampada" :escala="3" /></span>
+        Apagar a luz
       </button>
     </div>
   </section>
@@ -221,6 +266,26 @@ onUnmounted(() => {
 .desenho {
   position: relative;
   width: 180px;
+}
+
+/* luz apagada: a telinha escurece (o gato continua aparecendo, dormindo) */
+.visor {
+  transition: background-color 0.4s;
+}
+
+.visor.apagado {
+  background-color: var(--lcd-escuro);
+}
+
+.visor.apagado .hora,
+.visor.apagado .bateria {
+  color: #6f6a85;
+}
+
+.caixinha {
+  position: absolute;
+  left: 1.5rem;
+  bottom: calc(var(--space-4) + 4px);
 }
 
 .chao {

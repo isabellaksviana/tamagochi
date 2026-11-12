@@ -28,6 +28,8 @@ export const ICONES = {
 
   // ---------- ações ----------
   caixinha: ['...........', '.KKKKKKKKK.', '.KaaaaaaaK.', 'KKKKKKKKKKK', 'KLLLLLLLLLK', 'KLhLLLLLLLK', '.KLLLLLLLK.', '.KKKKKKKKK.'],
+  // a mesma caixinha, suja (aparece no visor quando a higiene cai)
+  caixinhaSuja: ['..g.....g..', '.KKdKKdKKK.', '.KadddaddK.', 'KKKKKKKKKKK', 'KLLLLLLLLLK', 'KLhLLLLLLLK', '.KLLLLLLLK.', '.KKKKKKKKK.'],
   novelo: ['..KKKKK..', '.KLLlLLK.', 'KLLLlLLLK', 'KlLLLlLLK', 'KLlLLLlLK', 'KLLlLLLlK', '.KLLlLLK.', '..KKKKK.K', '.......KK'],
   lampada: ['..KKK..', '.KYYYK.', 'KYhYYYK', 'KYYYYYK', 'KYYYYYK', '.KYYYK.', '..KYK..', '.KKKKK.', '.KgggK.', '..KKK..'],
 

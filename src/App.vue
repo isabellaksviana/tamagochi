@@ -100,15 +100,15 @@ function cuidar(chave: keyof Status, quanto: number) {
   bicho.status[chave] = limitar(bicho.status[chave] + quanto)
 }
 
-function quandoComer() {
+function quandoAlimentar() {
   cuidar('fome', 25)
 }
 
-function quandoSeLamber() {
+function quandoLimparCaixinha() {
   cuidar('higiene', 35)
 }
 
-function quandoDormir() {
+function quandoApagarLuz() {
   cuidar('energia', 35)
 }
 
@@ -225,10 +225,10 @@ watch(
       v-if="tela === 'pet' && bichoAtual !== null"
       :bicho="bichoAtual"
       :biscoitos="biscoitos"
-      @comeu="quandoComer"
-      @se-lambeu="quandoSeLamber"
+      @alimentou="quandoAlimentar"
+      @limpou-caixinha="quandoLimparCaixinha"
       @brincou="quandoBrincar"
-      @dormiu="quandoDormir"
+      @apagou-luz="quandoApagarLuz"
       @soltou="quandoSoltou"
       @voltou="irParaLista"
       @abriu-loja="lojaAberta = true"

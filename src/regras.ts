@@ -4,6 +4,9 @@ import type { Status } from './tipos'
 // abaixo disso, a barra fica vermelha e a cara do bicho muda
 export const LIMITE_BAIXO = 30
 
+// abaixo disso, a caixinha de areia aparece suja no visor
+export const CAIXINHA_SUJA = 50
+
 // a cara que cada status faz quando está baixo
 const CARA_QUANDO_BAIXO: Record<keyof Status, Expressao> = {
   fome: 'bravo',
@@ -15,7 +18,7 @@ const CARA_QUANDO_BAIXO: Record<keyof Status, Expressao> = {
 // o que aparece na lista quando o status está baixo
 const AVISO_QUANDO_BAIXO: Record<keyof Status, string> = {
   fome: 'Com fome',
-  higiene: 'Precisa de banho',
+  higiene: 'Caixinha suja',
   felicidade: 'Carente',
   energia: 'Cansado',
 }
