@@ -3,9 +3,9 @@ import { computed } from 'vue'
 import {
   PhArrowLeft,
   PhBackpack,
-  PhBathtub,
   PhBowlFood,
   PhCookie,
+  PhDrop,
   PhHandWaving,
   PhMoon,
   PhYarn,
@@ -24,7 +24,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   comeu: []
-  tomouBanho: []
+  seLambeu: []
   brincou: []
   dormiu: []
   soltou: []
@@ -124,9 +124,9 @@ function excluir() {
         <span class="circulo"><PhBowlFood weight="duotone" :size="30" aria-hidden="true" /></span>
         Alimentar
       </button>
-      <button class="acao" type="button" @click="emit('tomouBanho')" :disabled="bicho.status.higiene === 100">
-        <span class="circulo"><PhBathtub weight="duotone" :size="30" aria-hidden="true" /></span>
-        Banho
+      <button class="acao" type="button" @click="emit('seLambeu')" :disabled="bicho.status.higiene === 100">
+        <span class="circulo"><PhDrop weight="duotone" :size="30" aria-hidden="true" /></span>
+        Se lamber
       </button>
       <button class="acao" type="button" @click="brincar" :disabled="bicho.status.energia === 0">
         <span class="circulo"><PhYarn weight="duotone" :size="30" aria-hidden="true" /></span>

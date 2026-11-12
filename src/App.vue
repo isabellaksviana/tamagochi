@@ -104,7 +104,7 @@ function quandoComer() {
   cuidar('fome', 25)
 }
 
-function quandoBanho() {
+function quandoSeLamber() {
   cuidar('higiene', 35)
 }
 
@@ -226,7 +226,7 @@ watch(
       :bicho="bichoAtual"
       :biscoitos="biscoitos"
       @comeu="quandoComer"
-      @tomou-banho="quandoBanho"
+      @se-lambeu="quandoSeLamber"
       @brincou="quandoBrincar"
       @dormiu="quandoDormir"
       @soltou="quandoSoltou"
