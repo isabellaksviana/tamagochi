@@ -60,7 +60,7 @@ function adotar() {
     <div class="lado-a-lado">
       <div class="vitrine">
         <div class="palco">
-          <DesenhoBicho class="desenho" :especie="especie" :cor="cor" expressao="feliz" />
+          <DesenhoBicho class="desenho" :especie="especie" :cor="cor" expressao="feliz" respirando />
         </div>
         <p class="nome-preview" :class="{ vazio: nomeLimpo === '' }">
           {{ nomeLimpo === '' ? 'sem nome ainda' : nomeLimpo }}

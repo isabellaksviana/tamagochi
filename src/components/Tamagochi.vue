@@ -136,7 +136,7 @@ onUnmounted(() => {
         <i v-for="n in 3" :key="n" :class="{ acesa: n <= risquinhosDaBateria }" />
       </span>
       <span class="hora numero">{{ hora }}</span>
-      <DesenhoBicho class="desenho" :especie="bicho.especie" :cor="bicho.cor" :expressao="expressao" />
+      <DesenhoBicho class="desenho" :especie="bicho.especie" :cor="bicho.cor" :expressao="expressao" respirando />
       <!-- a caixinha de areia do canto: suja quando a higiene cai (o "cocô" do tamagochi) -->
       <span class="caixinha" :title="caixinhaSuja ? 'A caixinha está suja' : 'Caixinha limpinha'">
         <IconePixel :nome="caixinhaSuja ? 'caixinhaSuja' : 'caixinha'" :escala="3" />
