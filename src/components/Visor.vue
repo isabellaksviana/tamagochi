@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import DesenhoBicho from './DesenhoBicho.vue'
+import DesenhoOvo from './DesenhoOvo.vue'
 import IconePixel from './IconePixel.vue'
-import { ALTURA, LARGURA, ovoEmPixel, retangulosDa } from './bicho/pixel'
 import { CAIXINHA_SUJA, faseDo } from '../regras'
 import type { Expressao } from './bicho/cores'
 import type { Bicho } from '../tipos'
@@ -27,7 +27,6 @@ const emit = defineEmits<{
 }>()
 
 const fase = computed(() => faseDo(props.bicho.chocou, props.bicho.idade))
-const ovo = computed(() => retangulosDa(ovoEmPixel(props.bicho.toquesNoOvo)))
 const caixinhaSuja = computed(() => props.bicho.status.higiene < CAIXINHA_SUJA)
 const risquinhosDaBateria = computed(() => Math.ceil(props.bicho.status.energia / 34))
 const dormindo = computed(() => props.bicho.luzApagada)
@@ -108,9 +107,7 @@ const passeando = computed(() => fase.value !== 'ovo' && !dormindo.value && !pro
 
     <!-- o ovo: balança e racha a cada toque -->
     <button v-if="!jogando && fase === 'ovo'" class="ovo" type="button" :aria-label="`Tocar no ovo (${bicho.toquesNoOvo} de 5)`" @click="emit('tocouOvo')">
-      <svg :viewBox="`0 0 ${LARGURA} ${ALTURA}`" shape-rendering="crispEdges" aria-hidden="true">
-        <rect v-for="(r, i) in ovo" :key="i" :x="r.x" :y="r.y" :width="r.largura" height="1" :fill="r.cor" />
-      </svg>
+      <DesenhoOvo class="desenho-ovo" :rachaduras="bicho.toquesNoOvo" />
     </button>
 
     <button
@@ -240,10 +237,7 @@ const passeando = computed(() => fase.value !== 'ovo' && !dormindo.value && !pro
   cursor: pointer;
 }
 
-.ovo svg {
-  display: block;
-  width: 100%;
-  height: auto;
+.desenho-ovo {
   animation: balancar 1.2s steps(1) infinite;
 }
 
@@ -389,7 +383,7 @@ const passeando = computed(() => fase.value !== 'ovo' && !dormindo.value && !pro
 
 @media (prefers-reduced-motion: reduce) {
   .gato.passeando,
-  .ovo svg,
+  .desenho-ovo,
   .estrelas {
     animation: none;
   }

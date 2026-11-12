@@ -1,5 +1,5 @@
 import type { Expressao } from './components/bicho/cores'
-import type { Status } from './tipos'
+import type { Bicho, Status } from './tipos'
 
 // abaixo disso, a barra fica vermelha e a cara do bicho muda
 export const LIMITE_BAIXO = 30
@@ -119,4 +119,23 @@ export function expressaoDo(status: Status): Expressao {
 export function avisoDo(status: Status): string {
   const pior = piorStatus(status)
   return status[pior] < LIMITE_BAIXO ? AVISO_QUANDO_BAIXO[pior] : 'Tudo bem'
+}
+
+// ============ como o bicho aparece na lista ============
+// o mesmo estado da tela dele: ovo, dormindo, doente ou a cara do pior status
+export type NaLista = {
+  ovo: boolean
+  dormindo: boolean
+  expressao: Expressao
+  aviso: string
+  // aviso em vermelho (precisa de cuidado)
+  alerta: boolean
+}
+
+export function comoNaLista(bicho: Bicho): NaLista {
+  if (!bicho.chocou) return { ovo: true, dormindo: false, expressao: 'neutro', aviso: 'Ovo · quase chocando', alerta: false }
+  if (bicho.luzApagada) return { ovo: false, dormindo: true, expressao: 'dormindo', aviso: 'Dormindo', alerta: false }
+  if (bicho.doente) return { ovo: false, dormindo: false, expressao: 'doente', aviso: 'Doente!', alerta: true }
+  const aviso = avisoDo(bicho.status)
+  return { ovo: false, dormindo: false, expressao: expressaoDo(bicho.status), aviso, alerta: aviso !== 'Tudo bem' }
 }
