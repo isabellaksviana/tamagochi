@@ -1,6 +1,7 @@
 <script setup lang="ts">
 
   import { computed } from 'vue'
+  import Bicho from './Bicho.vue'
 
 const props = defineProps<{
   nome: string
@@ -14,11 +15,11 @@ const emit = defineEmits<{
 }>()
 
 // a carinha lê a fome que veio da vitrine
-const avatar = computed(() => {
+const expressao = computed(() => {
   if (props.fome === 0) {
-    return '😸'
+    return 'feliz'
   } else {
-    return '😿'
+    return 'triste'
   }
 })
 
@@ -42,7 +43,7 @@ function excluir() {
 
   <div class="tamagochi">
       <div>
-      <p>{{ avatar }}</p>
+      <Bicho class="avatar" especie="gato" cor="laranja" :expressao="expressao" />
       <p>Nome: {{ nome }}</p>
       <p>fome: {{ fome }}</p>
       </div>
@@ -73,7 +74,12 @@ function excluir() {
   .tamagochi div {
     display: flex;
     gap: 20px;
+    align-items: center;
+  }
 
+  .avatar {
+    width: 96px;
+    flex-shrink: 0;
   }
 
 
