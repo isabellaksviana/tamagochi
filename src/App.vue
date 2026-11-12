@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import Tamagochi from './components/Tamagochi.vue'
 import Modal from './components/Modal.vue'
 import CriarPet from './components/CriarPet.vue'
 import ListaPets from './components/ListaPets.vue'
 import type { CorGato, Especie } from './components/bicho/cores'
+import { passarTempoAberto, passarTempoFechado } from './regras'
 import type { Bicho } from './tipos'
 
 // a versão antiga salvava só isto (e a fome ia de 0 a 5, com 0 = satisfeito)
@@ -30,7 +31,12 @@ function carregarBichos(): Bicho[] {
       nome: bicho.nome,
       especie: 'gato',
       cor: 'laranja',
-      status: { fome: 100 - bicho.fome * 20, higiene: 80, felicidade: 80, energia: 80 },
+      status: {
+        fome: 100 - bicho.fome * 20,
+        higiene: 80,
+        felicidade: 80,
+        energia: 80,
+      },
     }
   })
 }
@@ -41,6 +47,13 @@ function limitar(valor: number) {
 }
 
 const bichos = ref<Bicho[]>(carregarBichos())
+
+// quando o jogo abre, desconta o tempo que ele ficou fechado (devagar e com piso)
+const ultimaVisita = Number(localStorage.getItem('ultimaVisita'))
+if (ultimaVisita > 0) {
+  const segundosFechado = (Date.now() - ultimaVisita) / 1000
+  bichos.value.forEach((bicho) => passarTempoFechado(bicho.status, segundosFechado))
+}
 const idSalvo = localStorage.getItem('proximoId')
 let proximoId = idSalvo ? Number(idSalvo) : 1
 const bichoSoltando = ref<Bicho | null>(null)
@@ -115,6 +128,19 @@ function soltar() {
   bichoSoltando.value = null
   irParaLista()
 }
+
+let relogio = 0
+onMounted(() => {
+  relogio = setInterval(() => {
+    // a cada segundo, todos os bichos sentem o tempo passar (não só o que está aberto)
+    bichos.value.forEach((bicho) => passarTempoAberto(bicho.status, 1))
+    // anota a hora: se a pessoa fechar o jogo agora, é daqui que conta o tempo fechado
+    localStorage.setItem('ultimaVisita', String(Date.now()))
+  }, 1000)
+})
+onUnmounted(() => {
+  clearInterval(relogio)
+})
 
 watch(
   bichos,

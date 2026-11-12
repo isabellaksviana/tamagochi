@@ -20,10 +20,44 @@ const AVISO_QUANDO_BAIXO: Record<keyof Status, string> = {
   energia: 'Cansado',
 }
 
+// ============ o tempo passando ============
+
+// quanto cada barra cai por segundo com o jogo aberto: 100 ÷ (minutos até esvaziar × 60)
+const QUEDA_POR_SEGUNDO: Status = {
+  fome: 100 / (8 * 60),
+  felicidade: 100 / (10 * 60),
+  energia: 100 / (12 * 60),
+  higiene: 100 / (15 * 60),
+}
+
+// com o jogo fechado, o tempo passa 20 vezes mais devagar...
+const LENTIDAO_FECHADO = 20
+// ...e nunca deixa a barra abaixo disto (o bicho fica carente, mas não no vermelho)
+const PISO_FECHADO = 40
+
+function chavesDo(status: Status) {
+  return Object.keys(status) as (keyof Status)[]
+}
+
+// jogo aberto: cai no ritmo normal, até 0
+export function passarTempoAberto(status: Status, segundos: number) {
+  for (const chave of chavesDo(status)) {
+    status[chave] = Math.max(0, status[chave] - QUEDA_POR_SEGUNDO[chave] * segundos)
+  }
+}
+
+// jogo fechado: cai devagar e para no piso (se já estava abaixo do piso, fica onde está)
+export function passarTempoFechado(status: Status, segundos: number) {
+  for (const chave of chavesDo(status)) {
+    const depois = status[chave] - (QUEDA_POR_SEGUNDO[chave] * segundos) / LENTIDAO_FECHADO
+    const piso = Math.min(status[chave], PISO_FECHADO)
+    status[chave] = Math.max(piso, depois)
+  }
+}
+
 // o status mais baixo do bicho
 function piorStatus(status: Status): keyof Status {
-  const chaves = Object.keys(status) as (keyof Status)[]
-  return chaves.reduce((a, b) => (status[a] <= status[b] ? a : b))
+  return chavesDo(status).reduce((a, b) => (status[a] <= status[b] ? a : b))
 }
 
 // a carinha segue o pior status; se nenhum estiver baixo, ele fica feliz
