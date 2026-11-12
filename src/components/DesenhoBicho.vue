@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import Gato from './bicho/Gato.vue'
-import Rosto from './bicho/Rosto.vue'
-import { CORES_PADRAO, PELAGENS_GATO, type CorGato, type Especie, type Expressao } from './bicho/cores'
+import { ALTURA, gatoEmPixel, LARGURA, retangulosDa } from './bicho/pixel'
+import type { CorGato, Especie, Expressao } from './bicho/cores'
 
 const props = defineProps<{
   especie: Especie
@@ -10,23 +9,20 @@ const props = defineProps<{
   expressao: Expressao
 }>()
 
-const pelagem = computed(() => PELAGENS_GATO[props.cor])
-
-// junta as cores padrão com as da pelagem e vira variáveis CSS: { '--pelo': '#FFD7B0', ... }
-const variaveis = computed(() => {
-  const cores = { ...CORES_PADRAO, ...pelagem.value.cores }
-  cores['rosto-olho'] ??= cores.rosto
-  cores.cauda ??= cores.pelo
-  cores.peito ??= cores.focinho
-
-  return Object.fromEntries(Object.entries(cores).map(([nome, valor]) => [`--${nome}`, valor]))
-})
+// cada quadradinho da grade vira um <rect>; vizinhos da mesma cor viram um só
+const retangulos = computed(() => retangulosDa(gatoEmPixel(props.cor, props.expressao)))
 </script>
 
 <template>
-  <svg class="bicho" viewBox="0 0 200 220" :style="variaveis" role="img" :aria-label="`${especie} ${cor}, ${expressao}`">
-    <Gato :padrao="pelagem.padrao" />
-    <Rosto :expressao="expressao" :com-nariz="true" />
+  <!-- crispEdges: sem suavizar as bordas, pra cada pixel ficar "duro" -->
+  <svg
+    class="bicho"
+    :viewBox="`0 0 ${LARGURA} ${ALTURA}`"
+    shape-rendering="crispEdges"
+    role="img"
+    :aria-label="`${especie} ${cor}, ${expressao}`"
+  >
+    <rect v-for="(r, i) in retangulos" :key="i" :x="r.x" :y="r.y" :width="r.largura" height="1" :fill="r.cor" />
   </svg>
 </template>
 
