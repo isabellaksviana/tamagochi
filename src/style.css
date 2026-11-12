@@ -92,6 +92,19 @@
   box-sizing: border-box;
 }
 
+/* celular: tocar rápido duas vezes (no ovo, nas setas do jogo) não dá zoom,
+   e o navegador não aumenta o texto sozinho ao virar a tela. A pinça continua funcionando. */
+html {
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+button {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
   margin: 0;
   padding: var(--space-8);
@@ -106,11 +119,12 @@ body {
   }
 }
 
+/* 16px no mínimo: com menos, o iPhone dá zoom sozinho ao tocar no campo (e a tela fica grande) */
 input {
   min-height: 2.75rem;
   padding: 0 var(--space-3);
   font: inherit;
-  font-size: var(--font-size-sm);
+  font-size: 1rem;
   color: var(--text);
   background: var(--surface);
   border: 2px solid var(--border);
