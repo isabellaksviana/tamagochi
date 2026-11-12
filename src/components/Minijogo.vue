@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onUnmounted, ref } from 'vue'
 import IconePixel from './IconePixel.vue'
+import { comecarMusica, pararMusica, tocar } from '../som'
 import type { Expressao } from './bicho/cores'
 
 // "Pra que lado?", o clássico do tamagochi: você chuta um lado, o gato olha pra um lado.
@@ -29,18 +30,22 @@ function comecar() {
   rodada.value = 1
   acertos.value = 0
   emit('olhou', 'neutro')
+  // a musiquinha de fundo toca enquanto o jogo durar
+  comecarMusica()
 }
 
 function chutar(lado: 'esquerda' | 'direita') {
   const sorteado = Math.random() < 0.5 ? 'esquerda' : 'direita'
   acertou.value = lado === sorteado
   if (acertou.value) acertos.value++
+  tocar(acertou.value ? 'acertou' : 'errou')
   emit('olhou', sorteado === 'esquerda' ? 'olhandoEsquerda' : 'olhandoDireita')
   etapa.value = 'revelar'
 
   clearTimeout(relogio)
   relogio = setTimeout(() => {
     if (rodada.value === RODADAS) {
+      pararMusica()
       etapa.value = 'fim'
       emit('olhou', acertos.value >= 3 ? 'feliz' : 'triste')
       emit('terminou', acertos.value)
@@ -49,6 +54,7 @@ function chutar(lado: 'esquerda' | 'direita') {
     }
     rodada.value++
     etapa.value = 'escolher'
+    tocar('rodada')
     emit('olhou', 'neutro')
   }, 1300)
 }
@@ -56,6 +62,7 @@ function chutar(lado: 'esquerda' | 'direita') {
 // saiu da aba no meio do jogo: o visor volta ao normal
 onUnmounted(() => {
   clearTimeout(relogio)
+  pararMusica()
   emit('olhou', null)
 })
 </script>
@@ -154,6 +161,8 @@ p {
 .lado {
   width: 5.5rem;
   height: 4rem;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .grande {

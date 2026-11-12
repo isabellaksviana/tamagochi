@@ -20,6 +20,7 @@ import {
   type Periodo,
 } from './regras'
 import type { ItemLoja } from './loja'
+import { tocar } from './som'
 import { CONTADORES_ZERADOS, type Bicho, type Status } from './tipos'
 
 // a versão antiga salvava só isto (e a fome ia de 0 a 5, com 0 = satisfeito)
@@ -157,11 +158,13 @@ function cuidar(chave: keyof Status, quanto: number) {
 
 function quandoAlimentar() {
   cuidar('fome', 25)
+  tocar('comer')
   if (bichoAtual.value) bichoAtual.value.contadores.alimentou++
 }
 
 function quandoLimparCaixinha() {
   cuidar('higiene', 35)
+  tocar('cuidar')
   if (bichoAtual.value) bichoAtual.value.contadores.caixinhas++
 }
 
@@ -170,16 +173,19 @@ function quandoApagarLuz() {
   const bicho = bichoAtual.value
   if (bicho === null) return
   bicho.luzApagada = true
+  tocar('apagarLuz')
   if (noite.value) bicho.contadores.noites++
 }
 
 function quandoAcenderLuz() {
   if (bichoAtual.value) bichoAtual.value.luzApagada = false
+  tocar('acenderLuz')
 }
 
 // brincar alegra, mas cansa e dá um pouco de fome
 function quandoBrincar() {
   cuidar('felicidade', 20)
+  tocar('cuidar')
   const bicho = bichoAtual.value
   if (bicho === null) {
     return
@@ -192,6 +198,7 @@ function quandoBrincar() {
 // carinho: um pouquinho de felicidade, no máximo 1 vez a cada 5 segundos (pra não virar fábrica)
 let ultimoCarinho = 0
 function quandoCarinho() {
+  tocar('carinho')
   const bicho = bichoAtual.value
   if (bicho === null || Date.now() - ultimoCarinho < 5000) return
   ultimoCarinho = Date.now()
@@ -204,6 +211,7 @@ function quandoJogou(acertos: number) {
   const bicho = bichoAtual.value
   if (bicho === null) return
   biscoitos.value += acertos
+  tocar('fimDoJogo')
   bicho.status.felicidade = limitar(bicho.status.felicidade + 15)
   bicho.status.energia = limitar(bicho.status.energia - 10)
   bicho.contadores.biscoitosNoJogo += acertos
@@ -214,12 +222,14 @@ function quandoJogou(acertos: number) {
 function chocar(bicho: Bicho) {
   bicho.chocou = true
   bicho.idade = 0
+  tocar('chocou')
 }
 
 function quandoTocarNoOvo() {
   const bicho = bichoAtual.value
   if (bicho === null || bicho.chocou) return
   bicho.toquesNoOvo++
+  tocar('ovo')
   if (bicho.toquesNoOvo >= TOQUES_PRA_CHOCAR) chocar(bicho)
 }
 
@@ -248,6 +258,7 @@ function comprar(item: ItemLoja) {
     return
   }
   biscoitos.value -= item.preco
+  tocar('comprar')
   mochila.value[item.id] = (mochila.value[item.id] ?? 0) + 1
 }
 
@@ -259,6 +270,7 @@ function dar(item: ItemLoja) {
     return
   }
   mochila.value[item.id] = quantos - 1
+  tocar('dar')
   for (const [chave, quanto] of Object.entries(item.efeito) as [keyof Status, number][]) {
     bicho.status[chave] = limitar(bicho.status[chave] + quanto)
   }
