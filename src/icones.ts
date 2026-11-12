@@ -40,8 +40,15 @@ export const ICONES = {
   lua: ['...KKK...', '..KYYK...', '.KYYK....', 'KYYK.....', 'KYYK.....', 'KYYYK..KK', '.KYYYKKYK', '..KYYYYK.', '...KKKK..'],
   porta: ['KKKKKKK', 'KOOOOOK', 'KOKKKOK', 'KOOOOOK', 'KOOOOYK', 'KOOOOOK', 'KOKKKOK', 'KOOOOOK', 'KKKKKKK'],
 
+  // ---------- navegação de baixo ----------
+  casa: ['....K....', '...KLK...', '..KLLLK..', '.KLLLLLK.', 'KKKKKKKKK', '.KWWWWWK.', '.KWKKKWK.', '.KWKOKWK.', '.KKKKKKK.'],
+  controle: ['.KKKKKKKKK.', 'KLLLLLLLLLK', 'KLLKLLLLPLK', 'KLKKKLLPLPK', 'KLLKLLLLPLK', 'KLLLLLLLLLK', '.KKK...KKK.'],
+  livro: ['.KKKKKKK.', 'KPPPPPPPK', 'KPKKKKKPK', 'KPPPPPPPK', 'KPKKKKPPK', 'KPPPPPPPK', 'KPPPPPPPK', 'KWWWWWWWK', '.KKKKKKK.'],
+  remedio: ['.KKKKKKK.', 'KhPPPWWWK', 'KPPPPWWWK', '.KKKKKKK.'],
+
   // ---------- interface (na cor do texto) ----------
   seta: ['...T...', '..TT...', '.TTTTTT', 'TTTTTTT', '.TTTTTT', '..TT...', '...T...'],
+  setaDireita: ['...T...', '...TT..', 'TTTTTT.', 'TTTTTTT', 'TTTTTT.', '...TT..', '...T...'],
   fechar: ['TT...TT', 'TTT.TTT', '.TTTTT.', '..TTT..', '.TTTTT.', 'TTT.TTT', 'TT...TT'],
   mais: ['..TTT..', '..TTT..', 'TTTTTTT', 'TTTTTTT', 'TTTTTTT', '..TTT..', '..TTT..'],
   certo: ['......TT', '.....TTT', 'TT..TTT.', 'TTTTTT..', '.TTTT...', '..TT....'],

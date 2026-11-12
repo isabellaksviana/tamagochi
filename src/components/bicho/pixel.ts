@@ -226,6 +226,33 @@ function desenharRosto(
       pintaVarios(SONO, [[40, 1], [41, 1], [42, 1], [43, 1], [42, 2], [41, 3], [40, 4], [41, 4], [42, 4], [43, 4]])
       break
 
+    case 'piscando':
+      // o olho fechado num risquinho reto, e a boquinha de sempre
+      pintaVarios(p.traco, espelho([[13, 21], [14, 21], [15, 21]]))
+      pintaVarios(p.traco, bocaW)
+      break
+
+    case 'olhandoEsquerda':
+    case 'olhandoDireita': {
+      // os dois olhos deslocados 2 pixels pro lado (sem espelho: os dois vão pro mesmo lado)
+      const dx = expressao === 'olhandoEsquerda' ? -2 : 2
+      const olhos: Ponto[] = []
+      for (let y = 19; y < 23; y++) for (const x of [13, 14, 15, 27, 28, 29]) olhos.push([x + dx, y])
+      pintaVarios(p.olho, olhos)
+      if (p.olho !== PUPILA) pintaVarios(PUPILA, [[14 + dx, 20], [14 + dx, 21], [28 + dx, 20], [28 + dx, 21]])
+      pintaVarios(BRILHO, [[15 + dx, 19], [29 + dx, 19]])
+      pintaVarios(p.traco, bocaW)
+      break
+    }
+
+    case 'doente':
+      // olhinho caído, boca ondulada e a bolsinha de gelo... no caso, a cruzinha vermelha
+      pintaVarios(p.traco, espelho([[12, 20], [13, 21], [14, 21], [15, 21], [16, 20]]))
+      pintaVarios(p.traco, [[19, 26], [20, 25], [21, 26], [22, 25], [23, 26]])
+      pintaVarios(RAIVA, [[40, 2], [40, 3], [38, 4], [39, 4], [40, 4], [41, 4], [42, 4], [40, 5], [40, 6]])
+      pintaVarios(LAGRIMA, [[30, 14], [30, 15]])
+      break
+
     case 'bravo':
       olhoAberto(20, 3)
       // sobrancelha descendo pro meio
@@ -235,6 +262,40 @@ function desenharRosto(
       pintaVarios(RAIVA, [[39, 3], [41, 3], [38, 4], [42, 4], [38, 6], [42, 6], [39, 7], [41, 7]])
       break
   }
+}
+
+// ============ o ovo ============
+// um ovo creme com bolinhas lilás; cada toque abre uma rachadura nova
+export function ovoEmPixel(rachaduras: number): Grade {
+  const g: Grade = Array.from({ length: ALTURA }, () => Array<string | null>(LARGURA).fill(null))
+  const contorno = '#5B3A36'
+  const dentro = (x: number, y: number) => {
+    // mais fino em cima, mais gordinho embaixo
+    const ry = y < 30 ? 17 : 14
+    return ((x - 22) / 13) ** 2 + ((y - 30) / ry) ** 2 <= 1
+  }
+  for (let y = 0; y < ALTURA; y++) {
+    for (let x = 0; x < LARGURA; x++) {
+      if (dentro(x, y)) {
+        const bolinha = (x - 16) ** 2 + (y - 24) ** 2 <= 5 || (x - 27) ** 2 + (y - 34) ** 2 <= 6 || (x - 18) ** 2 + (y - 38) ** 2 <= 3
+        g[y]![x] = bolinha ? '#C9B6F2' : '#FFF6E6'
+      } else if (dentro(x - 1, y) || dentro(x + 1, y) || dentro(x, y - 1) || dentro(x, y + 1)) {
+        g[y]![x] = contorno
+      }
+    }
+  }
+  // brilho
+  for (const [x, y] of [[14, 19], [14, 20], [15, 18]] as Ponto[]) g[y]![x] = '#FFFFFF'
+  // as rachaduras, em zigue-zague, uma a mais por toque
+  const rachas: Ponto[][] = [
+    [[20, 22], [21, 23], [22, 22], [23, 23]],
+    [[24, 22], [25, 23], [26, 22], [27, 23]],
+    [[16, 23], [17, 22], [18, 23], [19, 22]],
+    [[22, 24], [22, 25], [21, 26]],
+    [[28, 22], [29, 23], [30, 22], [26, 24], [26, 25]],
+  ]
+  rachas.slice(0, rachaduras).forEach((racha) => racha.forEach(([x, y]) => (g[y]![x] = contorno)))
+  return g
 }
 
 // junta os quadradinhos vizinhos da mesma cor numa linha só (menos elementos no SVG)
