@@ -136,10 +136,6 @@ onUnmounted(() => {
           <span class="numero">{{ biscoitos }}</span>
         </button>
         <BotaoTema />
-        <!-- soltar não é cuidado: fica longe dos botões de cuidar, pra não clicar sem querer -->
-        <button class="button so-icone" type="button" :aria-label="`Soltar ${bicho.nome}`" title="Soltar" @click="emit('soltou')">
-          <IconePixel nome="porta" />
-        </button>
       </div>
     </header>
 
@@ -231,6 +227,7 @@ onUnmounted(() => {
       :periodo="periodo"
       @trocou-demo="emit('trocouDemo', $event)"
       @trocou-periodo="emit('trocouPeriodo', $event)"
+      @soltou="emit('soltou')"
     />
 
     <!-- ============ a navegação de baixo ============ -->

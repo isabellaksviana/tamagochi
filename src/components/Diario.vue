@@ -14,6 +14,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   trocouDemo: [ligado: boolean]
   trocouPeriodo: [periodo: Periodo]
+  soltou: []
 }>()
 
 const fase = computed(() => faseDo(props.bicho.chocou, props.bicho.idade))
@@ -80,6 +81,12 @@ const PERIODOS: { valor: Periodo; rotulo: string }[] = [
           {{ opcao.rotulo }}
         </button>
       </div>
+    </div>
+
+    <!-- soltar é raro e não tem volta: fica aqui no fim, longe dos cuidados (a janela ainda confirma) -->
+    <div class="soltar">
+      <p>Não dá mais pra cuidar? {{ bicho.nome }} pode ir morar com outra família.</p>
+      <button class="button button-danger" type="button" @click="emit('soltou')">Soltar {{ bicho.nome }}</button>
     </div>
   </section>
 </template>
@@ -177,6 +184,19 @@ h3 {
   border: 2px solid var(--border);
   border-radius: 999px;
   cursor: pointer;
+}
+
+.soltar {
+  display: grid;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 2px dashed var(--border);
+}
+
+.soltar p {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
 }
 
 .aba[aria-pressed='true'] {

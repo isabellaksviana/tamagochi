@@ -38,7 +38,6 @@ export const ICONES = {
   mochila: ['..KKKKK..', '.KLLLLLK.', 'KLhLLLLLK', 'KLLLLLLLK', 'KKKKKKKKK', 'KLLLKLLLK', 'KLLLLLLLK', 'KLKKKKKLK', 'KLKlllKLK', '.KKKKKKK.'],
   sol: ['....Y....', '.Y.....Y.', '...KKK...', '..KhYYK..', 'Y.KYYYK.Y', '..KYYYK..', '...KKK...', '.Y.....Y.', '....Y....'],
   lua: ['...KKK...', '..KYYK...', '.KYYK....', 'KYYK.....', 'KYYK.....', 'KYYYK..KK', '.KYYYKKYK', '..KYYYYK.', '...KKKK..'],
-  porta: ['KKKKKKK', 'KOOOOOK', 'KOKKKOK', 'KOOOOOK', 'KOOOOYK', 'KOOOOOK', 'KOKKKOK', 'KOOOOOK', 'KKKKKKK'],
 
   // ---------- navegação de baixo ----------
   casa: ['....K....', '...KLK...', '..KLLLK..', '.KLLLLLK.', 'KKKKKKKKK', '.KWWWWWK.', '.KWKKKWK.', '.KWKOKWK.', '.KKKKKKK.'],
