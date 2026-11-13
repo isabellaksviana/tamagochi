@@ -306,9 +306,28 @@ onUnmounted(() => {
           @olhou="olharDoJogo = $event"
           @terminou="emit('jogou', $event)"
         />
-        <ChuvaDePetiscos v-else-if="jogo === 'chuva'" :bicho="bicho" @jogando="jogandoNoVisor = $event" @terminou="emit('jogou', $event)" />
-        <HappyGochi v-else-if="jogo === 'happy'" :bicho="bicho" @jogando="jogandoNoVisor = $event" @terminou="emit('jogou', $event)" />
-        <GochiEspacial v-else :bicho="bicho" @jogando="jogandoNoVisor = $event" @terminou="emit('jogou', $event)" />
+        <!-- "saiu" (pela pausa): volta pra escolha dos jogos -->
+        <ChuvaDePetiscos
+          v-else-if="jogo === 'chuva'"
+          :bicho="bicho"
+          @jogando="jogandoNoVisor = $event"
+          @terminou="emit('jogou', $event)"
+          @saiu="escolherJogo(null)"
+        />
+        <HappyGochi
+          v-else-if="jogo === 'happy'"
+          :bicho="bicho"
+          @jogando="jogandoNoVisor = $event"
+          @terminou="emit('jogou', $event)"
+          @saiu="escolherJogo(null)"
+        />
+        <GochiEspacial
+          v-else
+          :bicho="bicho"
+          @jogando="jogandoNoVisor = $event"
+          @terminou="emit('jogou', $event)"
+          @saiu="escolherJogo(null)"
+        />
       </template>
     </template>
 

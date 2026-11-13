@@ -15,8 +15,9 @@ export function useJogoNoVisor(opcoes: {
 }) {
   const etapa = ref<Etapa>('inicio')
   const pausado = ref(false)
-  // pra onde o bicho está indo: -1 esquerda, 0 parado, 1 direita (não precisa ser reativo)
-  const controle = { direcao: 0 }
+  // pra onde o bicho está indo: -1 esquerda, 0 parado, 1 direita (não precisa ser reativo).
+  // direcaoY é pra quem anda pra cima e pra baixo também (a nave): -1 sobe, 1 desce
+  const controle = { direcao: 0, direcaoY: 0 }
   let quadro = 0
   let ultimoQuadro = 0
 
@@ -32,6 +33,7 @@ export function useJogoNoVisor(opcoes: {
     etapa.value = 'jogando'
     pausado.value = false
     controle.direcao = 0
+    controle.direcaoY = 0
     opcoes.avisarJogando(true)
     comecarMusica()
     ultimoQuadro = performance.now()
@@ -44,6 +46,7 @@ export function useJogoNoVisor(opcoes: {
     cancelAnimationFrame(quadro)
     pararMusica()
     controle.direcao = 0
+    controle.direcaoY = 0
     etapa.value = 'fim'
     opcoes.avisarJogando(false)
   }
@@ -54,6 +57,7 @@ export function useJogoNoVisor(opcoes: {
     cancelAnimationFrame(quadro)
     pararMusica()
     controle.direcao = 0
+    controle.direcaoY = 0
   }
 
   function continuar() {
@@ -62,6 +66,17 @@ export function useJogoNoVisor(opcoes: {
     ultimoQuadro = performance.now()
     comecarMusica()
     quadro = requestAnimationFrame(laco)
+  }
+
+  // sair no meio (pela pausa): a partida acaba sem prêmio e o jogo volta pro começo
+  function sair() {
+    cancelAnimationFrame(quadro)
+    pararMusica()
+    controle.direcao = 0
+    controle.direcaoY = 0
+    pausado.value = false
+    etapa.value = 'inicio'
+    opcoes.avisarJogando(false)
   }
 
   function alternarPausa() {
@@ -73,6 +88,11 @@ export function useJogoNoVisor(opcoes: {
   function andar(direcao: number) {
     if (pausado.value) return
     controle.direcao = direcao
+  }
+
+  function andarVertical(direcao: number) {
+    if (pausado.value) return
+    controle.direcaoY = direcao
   }
 
   // tocar/clicar na metade esquerda ou direita da telinha
@@ -90,11 +110,18 @@ export function useJogoNoVisor(opcoes: {
     }
     if (evento.key === 'ArrowLeft') andar(-1)
     if (evento.key === 'ArrowRight') andar(1)
+    // setas de cima e de baixo: só fazem efeito em quem anda na vertical; não rolam a página no jogo
+    if (evento.key === 'ArrowUp' || evento.key === 'ArrowDown') {
+      evento.preventDefault()
+      andarVertical(evento.key === 'ArrowUp' ? -1 : 1)
+    }
   }
 
   function teclaSolta(evento: KeyboardEvent) {
     if (evento.key === 'ArrowLeft' && controle.direcao === -1) andar(0)
     if (evento.key === 'ArrowRight' && controle.direcao === 1) andar(0)
+    if (evento.key === 'ArrowUp' && controle.direcaoY === -1) andarVertical(0)
+    if (evento.key === 'ArrowDown' && controle.direcaoY === 1) andarVertical(0)
   }
 
   function quandoSumir() {
@@ -115,5 +142,5 @@ export function useJogoNoVisor(opcoes: {
     document.removeEventListener('visibilitychange', quandoSumir)
   })
 
-  return { etapa, pausado, controle, comecar, terminar, pausar, continuar, alternarPausa, andar, tocarNaTela }
+  return { etapa, pausado, controle, comecar, terminar, sair, pausar, continuar, alternarPausa, andar, andarVertical, tocarNaTela }
 }

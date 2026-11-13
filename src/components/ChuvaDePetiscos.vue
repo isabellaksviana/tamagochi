@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import DesenhoBicho from './DesenhoBicho.vue'
 import IconePixel from './IconePixel.vue'
+import AvisoPausa from './AvisoPausa.vue'
 import { comecarMusica, pararMusica, tocar } from '../som'
 import type { NomeIcone } from '../icones'
 import type { Bicho } from '../tipos'
@@ -17,6 +18,8 @@ const emit = defineEmits<{
   // avisa a tela que a partida começou/acabou (o visor esconde o bicho de sempre)
   jogando: [ligado: boolean]
   terminou: [moedas: number]
+  // saiu no meio, pela pausa (volta pra escolha dos jogos)
+  saiu: []
 }>()
 
 const VIDAS = 5
@@ -84,6 +87,18 @@ function pausar() {
   cancelAnimationFrame(quadro)
   pararMusica()
   direcao = 0
+}
+
+// sair pela pausa: acaba sem prêmio e volta pra escolha dos jogos
+function sair() {
+  cancelAnimationFrame(quadro)
+  pararMusica()
+  direcao = 0
+  pausado.value = false
+  petiscos.value = []
+  etapa.value = 'inicio'
+  emit('jogando', false)
+  emit('saiu')
 }
 
 function continuar() {
@@ -266,10 +281,7 @@ onUnmounted(() => {
             <DesenhoBicho :especie="bicho.especie" :cor="bicho.cor" :expressao="pegouAgora ? 'feliz' : 'surpreso'" />
           </span>
           <!-- pausado: o aviso no meio da telinha (tocar nele continua) -->
-          <button v-if="pausado" class="aviso-pausa" type="button" @pointerdown.stop @click="continuar">
-            Pausado
-            <small>toque pra continuar</small>
-          </button>
+          <AvisoPausa v-if="pausado" @continuar="continuar" @sair="sair" />
         </div>
       </Teleport>
 
@@ -365,27 +377,6 @@ p {
   min-height: 2.25rem;
 }
 
-/* o aviso de pausa no meio do visor */
-.aviso-pausa {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-content: center;
-  gap: var(--space-1);
-  font-family: var(--font-pixel);
-  font-size: 1.4rem;
-  color: var(--text);
-  background: color-mix(in srgb, var(--lcd) 70%, transparent);
-  border: none;
-  cursor: pointer;
-}
-
-.aviso-pausa small {
-  font-family: var(--font);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--text-muted);
-}
 
 /* vida perdida: o coraçãozinho fica apagado */
 .vidas .perdida {

@@ -68,6 +68,8 @@ export const ICONES = {
   // ---------- interface (na cor do texto) ----------
   seta: ['...T...', '..TT...', '.TTTTTT', 'TTTTTTT', '.TTTTTT', '..TT...', '...T...'],
   setaDireita: ['...T...', '...TT..', 'TTTTTT.', 'TTTTTTT', 'TTTTTT.', '...TT..', '...T...'],
+  setaCima: ['...T...', '..TTT..', '.TTTTT.', 'TTTTTTT', '..TTT..', '..TTT..', '..TTT..'],
+  setaBaixo: ['..TTT..', '..TTT..', '..TTT..', 'TTTTTTT', '.TTTTT.', '..TTT..', '...T...'],
   fechar: ['TT...TT', 'TTT.TTT', '.TTTTT.', '..TTT..', '.TTTTT.', 'TTT.TTT', 'TT...TT'],
   mais: ['..TTT..', '..TTT..', 'TTTTTTT', 'TTTTTTT', 'TTTTTTT', '..TTT..', '..TTT..'],
   certo: ['......TT', '.....TTT', 'TT..TTT.', 'TTTTTT..', '.TTTT...', '..TT....'],
@@ -87,6 +89,9 @@ export const ICONES = {
     'KK..YAYAY..KK',
     '.....Y.Y.....',
   ],
+  // power-ups (o tiro rápido usa o raio; a vida extra, o coração)
+  escudo: ['.KKKKKKK.', 'KBBBBBBBK', 'KBhBBBBBK', 'KBBBBBBBK', 'KBBBBBBBK', '.KBBBBBK.', '.KBBBBBK.', '..KBBBK..', '...KBK...', '....K....'],
+  tiroTriplo: ['Y...Y...Y', 'Y...Y...Y', 'K...K...K', '.Y..Y..Y.', '.K..K..K.', '..Y.Y.Y..', '..K.K.K..', '...KKK...'],
   asteroide: ['..KKKK...', '.KggggKK.', 'KgKgggggK', 'KgggggKgK', 'KggKggggK', 'KgggggggK', '.KggKgggK', '..KggggK.', '...KKKK..'],
   chefao: [
     '........KKKKKKK........',

@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import DesenhoBicho from './DesenhoBicho.vue'
 import IconePixel from './IconePixel.vue'
 import ControlesDoJogo from './ControlesDoJogo.vue'
+import AvisoPausa from './AvisoPausa.vue'
 import { useJogoNoVisor } from '../composables/useJogoNoVisor'
 import { tocar } from '../som'
 import type { Bicho } from '../tipos'
@@ -17,6 +18,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   jogando: [ligado: boolean]
   terminou: [moedas: number]
+  // saiu no meio, pela pausa (volta pra escolha dos jogos)
+  saiu: []
 }>()
 
 const GRAVIDADE = 1400 // px/s²
@@ -154,6 +157,12 @@ function comecar() {
   jogo.comecar()
 }
 
+// sair pela pausa: acaba sem prêmio e volta pra escolha dos jogos
+function sair() {
+  jogo.sair()
+  emit('saiu')
+}
+
 function terminar() {
   jogo.terminar()
   if (pontos.value > recorde.value) {
@@ -207,10 +216,7 @@ function terminar() {
           <span class="bicho" :style="{ left: `${bichoX - 30}px`, top: `${bichoY - 65}px` }">
             <DesenhoBicho :especie="bicho.especie" :cor="bicho.cor" :expressao="subindo ? 'feliz' : 'surpreso'" />
           </span>
-          <button v-if="jogo.pausado.value" class="aviso-pausa" type="button" @pointerdown.stop @click="jogo.continuar">
-            Pausado
-            <small>toque pra continuar</small>
-          </button>
+          <AvisoPausa v-if="jogo.pausado.value" @continuar="jogo.continuar" @sair="sair" />
         </div>
       </Teleport>
     </template>
@@ -303,26 +309,6 @@ p {
   width: 60px;
 }
 
-.aviso-pausa {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-content: center;
-  gap: var(--space-1);
-  font-family: var(--font-pixel);
-  font-size: 1.4rem;
-  color: var(--text);
-  background: color-mix(in srgb, var(--lcd) 70%, transparent);
-  border: none;
-  cursor: pointer;
-}
-
-.aviso-pausa small {
-  font-family: var(--font);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--text-muted);
-}
 
 .recorde {
   font-weight: 600;
