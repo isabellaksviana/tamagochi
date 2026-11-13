@@ -34,7 +34,7 @@ function comprar(item: ItemLoja) {
 </script>
 
 <template>
-  <Janela titulo="Lojinha" subtitulo="Tudo vai para a sua mochila" @fechou="emit('fechou')">
+  <Janela titulo="Lojinha" subtitulo="Tudo vai para a sua mochila" fixa @fechou="emit('fechou')">
     <template #icone>
       <DesenhoBicho :especie="bicho.especie" :cor="bicho.cor" expressao="feliz" so-cabeca />
     </template>
@@ -103,13 +103,13 @@ function comprar(item: ItemLoja) {
   border-radius: var(--radius-lg);
 }
 
-/* as abinhas de categoria: rolam de lado no celular, em vez de quebrar linha */
+/* as abinhas de categoria: quebram em linhas no celular, pra todas ficarem à vista
+   (rolar pro lado escondia as últimas, e ninguém adivinhava que dava pra arrastar) */
 .abas {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
   margin-bottom: var(--space-3);
-  overflow-x: auto;
-  padding-bottom: 2px;
 }
 
 .aba {

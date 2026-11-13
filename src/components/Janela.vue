@@ -9,6 +9,8 @@ const props = defineProps<{
   subtitulo?: string
   // a versão pequena, pra confirmações
   pequena?: boolean
+  // altura fixa (a loja): não cresce nem encolhe quando o conteúdo muda; o que sobrar rola
+  fixa?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -40,7 +42,7 @@ function cliqueNoFundo(evento: MouseEvent) {
   <dialog
     ref="janela"
     class="janela"
-    :class="{ pequena: props.pequena }"
+    :class="{ pequena: props.pequena, fixa: props.fixa }"
     :aria-labelledby="idDoTitulo"
     @close="emit('fechou')"
     @click="cliqueNoFundo"
@@ -77,6 +79,11 @@ function cliqueNoFundo(evento: MouseEvent) {
 
 .janela.pequena {
   width: min(24rem, 100vw - 2rem);
+}
+
+/* altura fixa: trocar de aba na loja não faz a janela pular de tamanho */
+.janela.fixa {
+  height: min(42rem, 100dvh - 2rem);
 }
 
 .janela::backdrop {
