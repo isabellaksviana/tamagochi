@@ -3,7 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import DesenhoBicho from './DesenhoBicho.vue'
 import DesenhoOvo from './DesenhoOvo.vue'
 import IconePixel from './IconePixel.vue'
-import { CAIXINHA_SUJA, faseDo } from '../regras'
+import { CAIXINHA_SUJA, faseDo, HIGIENE } from '../regras'
 import type { Expressao } from './bicho/cores'
 import type { Bicho } from '../tipos'
 
@@ -123,8 +123,8 @@ const passeando = computed(() => fase.value !== 'ovo' && !dormindo.value && !pro
     </button>
 
     <!-- a caixinha de areia do canto: suja quando a higiene cai (o "cocô" do tamagochi) -->
-    <span v-if="fase !== 'ovo' && !jogando" class="caixinha" :title="caixinhaSuja ? 'A caixinha está suja' : 'Caixinha limpinha'">
-      <IconePixel :nome="caixinhaSuja ? 'caixinhaSuja' : 'caixinha'" :escala="3" />
+    <span v-if="fase !== 'ovo' && !jogando" class="caixinha" :title="caixinhaSuja ? HIGIENE[bicho.especie].aviso : 'Tudo limpinho'">
+      <IconePixel :nome="caixinhaSuja ? HIGIENE[bicho.especie].iconeSujo : HIGIENE[bicho.especie].icone" :escala="3" />
     </span>
 
     <!-- doente: o remedinho piscando no canto -->

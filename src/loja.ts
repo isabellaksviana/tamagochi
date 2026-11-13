@@ -7,7 +7,7 @@ export type Categoria = 'comida' | 'brinquedo' | 'caixinha' | 'descanso' | 'farm
 export const CATEGORIAS: { valor: Categoria; rotulo: string; icone: NomeIcone }[] = [
   { valor: 'comida', rotulo: 'Comida', icone: 'tigela' },
   { valor: 'brinquedo', rotulo: 'Brinquedos', icone: 'novelo' },
-  { valor: 'caixinha', rotulo: 'Caixinha', icone: 'caixinha' },
+  { valor: 'caixinha', rotulo: 'Higiene', icone: 'gota' },
   { valor: 'descanso', rotulo: 'Descanso', icone: 'lua' },
   { valor: 'farmacia', rotulo: 'Farmácia', icone: 'remedio' },
 ]
@@ -62,8 +62,8 @@ export const ITENS_DA_LOJA: ItemLoja[] = [
   },
   {
     id: 'areia',
-    nome: 'Areia perfumada',
-    descricao: 'Caixinha trocadinha e cheirosa.',
+    nome: 'Kit cheirinho',
+    descricao: 'Caixinha, piscininha ou água: tudo limpinho e cheiroso.',
     categoria: 'caixinha',
     preco: 8,
     efeito: { higiene: 60 },

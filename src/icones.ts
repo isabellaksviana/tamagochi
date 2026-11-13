@@ -17,6 +17,9 @@ export const CORES_DO_ICONE: Record<string, string> = {
   W: '#FFF8F0', // branquinho
   g: '#A99AA6', // cinza
   O: '#C49F7B', // madeira
+  f: '#D8C66A', // feno
+  u: '#A99A6B', // água suja
+  p: '#7FA36B', // folhinha na água
 }
 
 export const ICONES = {
@@ -30,6 +33,15 @@ export const ICONES = {
   caixinha: ['...........', '.KKKKKKKKK.', '.KaaaaaaaK.', 'KKKKKKKKKKK', 'KLLLLLLLLLK', 'KLhLLLLLLLK', '.KLLLLLLLK.', '.KKKKKKKKK.'],
   // a mesma caixinha, suja (aparece no visor quando a higiene cai)
   caixinhaSuja: ['..g.....g..', '.KKdKKdKKK.', '.KadddaddK.', 'KKKKKKKKKKK', 'KLLLLLLLLLK', 'KLhLLLLLLLK', '.KLLLLLLLK.', '.KKKKKKKKK.'],
+  // coelho: caixinha com feno
+  caixinhaFeno: ['..f..f.f...', '.KKfKKfKKK.', '.KfffffffK.', 'KKKKKKKKKKK', 'KLLLLLLLLLK', 'KLhLLLLLLLK', '.KLLLLLLLK.', '.KKKKKKKKK.'],
+  caixinhaFenoSuja: ['..g.....g..', '.KKdKKdKKK.', '.KfdddfddK.', 'KKKKKKKKKKK', 'KLLLLLLLLLK', 'KLhLLLLLLLK', '.KLLLLLLLK.', '.KKKKKKKKK.'],
+  // capivara: a piscininha
+  piscina: ['...........', '.KKKKKKKKK.', '.KBBhBBBBK.', 'KKKKKKKKKKK', 'KPPPPPPPPPK', 'KPhPPPPPPPK', '.KPPPPPPPK.', '.KKKKKKKKK.'],
+  piscinaSuja: ['..g.....g..', '.KKKKKKKKK.', '.KuudupduK.', 'KKKKKKKKKKK', 'KPPPPPPPPPK', 'KPhPPPPPPPK', '.KPPPPPPPK.', '.KKKKKKKKK.'],
+  // tartaruga: o potinho d'água
+  agua: ['...........', '..KKKKKKK..', '.KBBhBBBBK.', 'KKKKKKKKKKK', 'KLhLLLLLLLK', '.KLLLLLLLK.', '..KLLLLLK..', '...KKKKK...'],
+  aguaSuja: ['..g....g...', '..KKKKKKK..', '.KuudduuuK.', 'KKKKKKKKKKK', 'KLhLLLLLLLK', '.KLLLLLLLK.', '..KLLLLLK..', '...KKKKK...'],
   novelo: ['..KKKKK..', '.KLLlLLK.', 'KLLLlLLLK', 'KlLLLlLLK', 'KLlLLLlLK', 'KLLlLLLlK', '.KLLlLLK.', '..KKKKK.K', '.......KK'],
   lampada: ['..KKK..', '.KYYYK.', 'KYhYYYK', 'KYYYYYK', 'KYYYYYK', '.KYYYK.', '..KYK..', '.KKKKK.', '.KgggK.', '..KKK..'],
 
