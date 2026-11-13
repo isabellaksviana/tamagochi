@@ -103,7 +103,7 @@ onUnmounted(() => {
       </p>
       <p class="ganho">
         <IconePixel nome="biscoito" />
-        <span class="numero">+{{ acertos }}</span> biscoitos
+        <span class="numero">+{{ acertos }}</span> {{ acertos === 1 ? 'biscoito' : 'biscoitos' }}
       </p>
       <button class="button button-primary grande" type="button" :disabled="props.energia < 20" @click="comecar">Jogar de novo</button>
     </template>

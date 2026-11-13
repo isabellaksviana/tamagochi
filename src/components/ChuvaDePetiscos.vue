@@ -6,26 +6,29 @@ import { comecarMusica, pararMusica, tocar } from '../som'
 import type { NomeIcone } from '../icones'
 import type { Bicho } from '../tipos'
 
-// "Chuva de petiscos": os petiscos caem do céu e você move o gato pros lados pra pegar.
-// 30 segundos; a cada 3 petiscos, 1 biscoito (no máximo 5 por partida).
+// "Chuva de petiscos": os petiscos caem do céu e você move o bicho pros lados pra pegar.
+// Sem tempo: são 5 vidas, e cada petisco que cai no chão tira uma. Começa devagar e acelera
+// a cada ponto. A cada 10 pontos, 1 biscoito (no máximo 5 por partida). E tem recorde!
 const props = defineProps<{
   bicho: Bicho
 }>()
 
 const emit = defineEmits<{
-  // avisa a tela que a partida começou/acabou (o visor esconde o gato de sempre)
+  // avisa a tela que a partida começou/acabou (o visor esconde o bicho de sempre)
   jogando: [ligado: boolean]
   terminou: [biscoitos: number]
 }>()
 
-const DURACAO = 30
-const PETISCOS_POR_BISCOITO = 3
+const VIDAS = 5
+const PONTOS_POR_BISCOITO = 10
 const MAXIMO_DE_BISCOITOS = 5
 // posições em % da largura/altura da telinha
 const VELOCIDADE_DO_GATO = 70 // % por segundo
-// onde o petisco encontra a cabeça do gato (o topo do petisco, em % da altura da telinha)
+// onde o petisco encontra a cabeça do bicho (o topo do petisco, em % da altura da telinha)
 const ALTURA_DA_BOCA = 47
-const ALCANCE = 11 // quão longe do meio do gato ainda conta como pego
+const ALCANCE = 11 // quão longe do meio do bicho ainda conta como pego
+// passou daqui sem ser pego: caiu no chão
+const CHAO = 86
 
 type Petisco = { id: number; x: number; y: number; icone: NomeIcone }
 const ICONES_DE_PETISCO: NomeIcone[] = ['peixe', 'biscoito', 'sache']
@@ -34,11 +37,15 @@ type Etapa = 'inicio' | 'jogando' | 'fim'
 const etapa = ref<Etapa>('inicio')
 const gatoX = ref(50)
 const petiscos = ref<Petisco[]>([])
-const pegos = ref(0)
-const restante = ref(DURACAO)
+const pontos = ref(0)
+const vidas = ref(VIDAS)
 const pegouAgora = ref(false)
 
-const biscoitosGanhos = computed(() => Math.min(MAXIMO_DE_BISCOITOS, Math.floor(pegos.value / PETISCOS_POR_BISCOITO)))
+// o recorde fica salvo (é do jogo, não de um bicho)
+const recorde = ref(Number(localStorage.getItem('recordeChuva') ?? 0))
+const bateuRecorde = ref(false)
+
+const biscoitosGanhos = computed(() => Math.min(MAXIMO_DE_BISCOITOS, Math.floor(pontos.value / PONTOS_POR_BISCOITO)))
 
 // pra onde o gato está andando: -1 esquerda, 0 parado, 1 direita
 let direcao = 0
@@ -53,8 +60,9 @@ function comecar() {
   etapa.value = 'jogando'
   gatoX.value = 50
   petiscos.value = []
-  pegos.value = 0
-  restante.value = DURACAO
+  pontos.value = 0
+  vidas.value = VIDAS
+  bateuRecorde.value = false
   tempoPraProximo = 0.5
   ultimoQuadro = performance.now()
   comecarMusica()
@@ -65,12 +73,10 @@ function comecar() {
 function passo(agora: number) {
   const segundos = Math.min(0.05, (agora - ultimoQuadro) / 1000)
   ultimoQuadro = agora
-  restante.value = Math.max(0, restante.value - segundos)
 
-  // quanto mais o tempo passa, mais rápido cai e mais petisco aparece
-  const andamento = 1 - restante.value / DURACAO
-  const velocidadeDaQueda = 30 + andamento * 30
-  const intervalo = 0.9 - andamento * 0.45
+  // começa devagarzinho; a cada ponto, cai mais rápido e aparece mais petisco (com um limite)
+  const velocidadeDaQueda = Math.min(80, 16 + pontos.value * 1.5)
+  const intervalo = Math.max(0.5, 1.6 - pontos.value * 0.035)
 
   gatoX.value = Math.min(92, Math.max(8, gatoX.value + direcao * VELOCIDADE_DO_GATO * segundos))
 
@@ -87,22 +93,25 @@ function passo(agora: number) {
 
   for (const petisco of petiscos.value) petisco.y += velocidadeDaQueda * segundos
 
-  // pegou: chegou na altura da boca e está perto do gato
+  // pegou: chegou na altura da boca e está perto do bicho. Caiu no chão: perde uma vida
   const restantes: Petisco[] = []
   for (const petisco of petiscos.value) {
     if (petisco.y >= ALTURA_DA_BOCA && petisco.y < ALTURA_DA_BOCA + 16 && Math.abs(petisco.x - gatoX.value) < ALCANCE) {
-      pegos.value++
+      pontos.value++
       tocar('pegou')
       pegouAgora.value = true
       clearTimeout(relogioDoPegou)
       relogioDoPegou = setTimeout(() => (pegouAgora.value = false), 300)
-    } else if (petisco.y < 105) {
+    } else if (petisco.y >= CHAO) {
+      vidas.value--
+      tocar('errou')
+    } else {
       restantes.push(petisco)
     }
   }
   petiscos.value = restantes
 
-  if (restante.value <= 0) return terminar()
+  if (vidas.value <= 0) return terminar()
   quadro = requestAnimationFrame(passo)
 }
 
@@ -112,6 +121,11 @@ function terminar() {
   direcao = 0
   petiscos.value = []
   etapa.value = 'fim'
+  if (pontos.value > recorde.value) {
+    recorde.value = pontos.value
+    bateuRecorde.value = true
+    localStorage.setItem('recordeChuva', String(pontos.value))
+  }
   emit('jogando', false)
   tocar('fimDoJogo')
   emit('terminou', biscoitosGanhos.value)
@@ -158,7 +172,11 @@ onUnmounted(() => {
     <h2>Chuva de petiscos</h2>
 
     <template v-if="etapa === 'inicio'">
-      <p>Mexa {{ bicho.nome }} pros lados pra pegar os petiscos que caem. São {{ DURACAO }} segundos; a cada {{ PETISCOS_POR_BISCOITO }} petiscos, 1 biscoito.</p>
+      <p>
+        Mexa {{ bicho.nome }} pros lados pra pegar os petiscos. São {{ VIDAS }} vidas: cada petisco que cai no chão
+        tira uma. Começa devagar e vai acelerando. A cada {{ PONTOS_POR_BISCOITO }} pontos, 1 biscoito.
+      </p>
+      <p v-if="recorde > 0" class="recorde">Recorde: <span class="numero">{{ recorde }}</span> pontos</p>
       <p v-if="bicho.status.energia < 20" class="aviso">Cansado demais pra brincar. Apague a luz um pouquinho.</p>
       <button class="button button-primary grande" type="button" :disabled="bicho.status.energia < 20" @click="comecar">
         <IconePixel nome="controle" />
@@ -168,8 +186,11 @@ onUnmounted(() => {
 
     <template v-else-if="etapa === 'jogando'">
       <p class="placar">
-        <span><IconePixel nome="peixe" /> <span class="numero">{{ pegos }}</span></span>
-        <span>Tempo <span class="numero">{{ Math.ceil(restante) }}</span></span>
+        <span>Pontos <span class="numero">{{ pontos }}</span></span>
+        <!-- as vidas em coraçõezinhos: cheios = ainda tem, apagados = perdeu -->
+        <span class="vidas" :aria-label="`${vidas} de ${VIDAS} vidas`">
+          <IconePixel v-for="n in VIDAS" :key="n" nome="coracao" :class="{ perdida: n > vidas }" />
+        </span>
       </p>
 
       <!-- o jogo acontece DENTRO do visor de LCD (o Teleport leva este pedaço pra lá).
@@ -218,13 +239,12 @@ onUnmounted(() => {
     </template>
 
     <template v-else>
-      <p class="resultado">
-        <span class="numero">{{ pegos }}</span> petiscos!
-        {{ pegos >= 9 ? `${bicho.nome} está de barriguinha cheia.` : 'Fica pra próxima.' }}
-      </p>
+      <p class="resultado">Fim de jogo! <span class="numero">{{ pontos }}</span> pontos</p>
+      <p v-if="bateuRecorde" class="recorde novo">Recorde novo!</p>
+      <p v-else class="recorde">Recorde: <span class="numero">{{ recorde }}</span> pontos</p>
       <p class="ganho">
         <IconePixel nome="biscoito" />
-        <span class="numero">+{{ biscoitosGanhos }}</span> biscoitos
+        <span class="numero">+{{ biscoitosGanhos }}</span> {{ biscoitosGanhos === 1 ? 'biscoito' : 'biscoitos' }}
       </p>
       <button class="button button-primary grande" type="button" :disabled="bicho.status.energia < 20" @click="comecar">Jogar de novo</button>
     </template>
@@ -271,6 +291,25 @@ p {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+}
+
+.vidas {
+  gap: 3px !important;
+}
+
+/* vida perdida: o coraçãozinho fica apagado */
+.vidas .perdida {
+  opacity: 0.2;
+  filter: grayscale(1);
+}
+
+.recorde {
+  font-weight: 600;
+}
+
+.recorde.novo {
+  font-family: var(--font-pixel);
+  color: var(--primary);
 }
 
 /* o palco dentro do visor: ocupa a telinha toda (o fundo de LCD é o do próprio visor) */
