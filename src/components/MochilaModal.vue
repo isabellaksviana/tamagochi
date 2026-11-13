@@ -74,7 +74,7 @@ function dar(item: ItemLoja) {
     <div v-else class="vazia">
       <p>A mochila está vazia.</p>
       <button class="button button-primary" type="button" @click="emit('irParaLoja')">
-        <IconePixel nome="biscoito" />
+        <IconePixel nome="moeda" />
         Ir para a Lojinha
       </button>
     </div>

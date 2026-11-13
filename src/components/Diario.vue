@@ -27,7 +27,7 @@ const linhas = computed(() => [
   { rotulo: 'Brincadeiras', valor: props.bicho.contadores.brincou },
   { rotulo: 'Carinhos', valor: props.bicho.contadores.carinhos },
   { rotulo: 'Noites dormidas', valor: props.bicho.contadores.noites },
-  { rotulo: 'Biscoitos no minijogo', valor: props.bicho.contadores.biscoitosNoJogo },
+  { rotulo: 'Moedas nos jogos', valor: props.bicho.contadores.biscoitosNoJogo },
 ])
 
 const PERIODOS: { valor: Periodo; rotulo: string }[] = [

@@ -14,6 +14,7 @@ export type Contadores = {
   brincou: number
   caixinhas: number
   noites: number
+  // as moedas ganhas nos jogos (o nome é da época em que a moeda era o biscoito; mudar apagaria a contagem salva)
   biscoitosNoJogo: number
   carinhos: number
 }

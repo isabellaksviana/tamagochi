@@ -10,6 +10,7 @@ export const CORES_DO_ICONE: Record<string, string> = {
   P: '#FF8FB0', // rosa (coração, bolinha, almofada)
   Y: '#F6D365', // amarelo (raio, lua, sol, lâmpada)
   C: '#E8B878', // biscoito
+  M: '#D9A43A', // o anel da moeda (dourado escuro)
   d: '#8A5A3A', // gotas de chocolate
   L: '#C9B6F2', // lilás (mochila, novelo, caixinha, caminha)
   l: '#A58FE0', // lilás escuro
@@ -46,6 +47,9 @@ export const ICONES = {
   lampada: ['..KKK..', '.KYYYK.', 'KYhYYYK', 'KYYYYYK', 'KYYYYYK', '.KYYYK.', '..KYK..', '.KKKKK.', '.KgggK.', '..KKK..'],
 
   // ---------- topo ----------
+  // a moeda do jogo: dourada, com um anel por dentro (o clássico)
+  moeda: ['..KKKKK..', '.KYYYYYK.', 'KYhMMMYYK', 'KYMYYYMYK', 'KYMYhYMYK', 'KYMYYYMYK', 'KYYMMMYYK', '.KYYYYYK.', '..KKKKK..'],
+  // o biscoito agora é só petisco (cai na Chuva de petiscos)
   biscoito: ['..KKKKK..', '.KCCCCCK.', 'KCdCCCCCK', 'KCCCCdCCK', 'KCCdCCCCK', 'KCCCCCdCK', '.KCdCCCK.', '..KKKKK..'],
   mochila: ['..KKKKK..', '.KLLLLLK.', 'KLhLLLLLK', 'KLLLLLLLK', 'KKKKKKKKK', 'KLLLKLLLK', 'KLLLLLLLK', 'KLKKKKKLK', 'KLKlllKLK', '.KKKKKKK.'],
   sol: ['....Y....', '.Y.....Y.', '...KKK...', '..KhYYK..', 'Y.KYYYK.Y', '..KYYYK..', '...KKK...', '.Y.....Y.', '....Y....'],

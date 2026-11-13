@@ -166,7 +166,7 @@ h2 {
   cursor: pointer;
 }
 
-/* números (biscoitos, quantidades) na fonte pixel */
+/* números (moedas, quantidades) na fonte pixel */
 .numero {
   font-family: var(--font-pixel);
   font-weight: 400;

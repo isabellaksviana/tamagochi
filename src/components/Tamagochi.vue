@@ -16,7 +16,7 @@ import type { Bicho } from '../tipos'
 
 const props = defineProps<{
   bicho: Bicho
-  biscoitos: number
+  moedas: number
   itensNaMochila: number
   noite: boolean
   doente: boolean
@@ -48,7 +48,7 @@ const aba = ref<Aba>('pet')
 
 const NAVEGACAO: { id: Aba | 'loja' | 'mochila'; rotulo: string; icone: NomeIcone }[] = [
   { id: 'pet', rotulo: 'Pet', icone: 'casa' },
-  { id: 'loja', rotulo: 'Loja', icone: 'biscoito' },
+  { id: 'loja', rotulo: 'Loja', icone: 'moeda' },
   { id: 'mochila', rotulo: 'Mochila', icone: 'mochila' },
   { id: 'jogar', rotulo: 'Jogar', icone: 'controle' },
   { id: 'diario', rotulo: 'Diário', icone: 'livro' },
@@ -140,16 +140,16 @@ onUnmounted(() => {
         <IconePixel nome="seta" />
       </button>
       <div class="direita">
-        <!-- os biscoitos são a porta da loja (como a moeda nos jogos) -->
+        <!-- as moedas são a porta da loja (como nos jogos) -->
         <button
-          class="button biscoitos"
+          class="button moedas"
           type="button"
-          :aria-label="`${biscoitos} biscoitos. Abrir a Lojinha`"
+          :aria-label="`${moedas} moedas. Abrir a Lojinha`"
           title="Lojinha"
           @click="emit('abriuLoja')"
         >
-          <IconePixel nome="biscoito" />
-          <span class="numero">{{ biscoitos }}</span>
+          <IconePixel nome="moeda" />
+          <span class="numero">{{ moedas }}</span>
         </button>
         <BotaoSom />
         <BotaoTema />
@@ -314,7 +314,7 @@ onUnmounted(() => {
   gap: var(--space-2);
 }
 
-.biscoitos {
+.moedas {
   padding: 0 var(--space-3);
   font-size: var(--font-size-base);
 }

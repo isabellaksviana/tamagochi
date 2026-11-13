@@ -9,7 +9,7 @@ import { CATEGORIAS, ITENS_DA_LOJA, type Categoria, type ItemLoja } from '../loj
 import type { Bicho } from '../tipos'
 
 defineProps<{
-  biscoitos: number
+  moedas: number
   // só pra aparecer no cabeçalho: a loja é do jogo, não de um bicho
   bicho: Bicho
 }>()
@@ -39,9 +39,9 @@ function comprar(item: ItemLoja) {
       <DesenhoBicho :especie="bicho.especie" :cor="bicho.cor" expressao="feliz" so-cabeca />
     </template>
     <template #extra>
-      <span class="carteira" :aria-label="`${biscoitos} biscoitos`">
-        <IconePixel nome="biscoito" />
-        <span class="numero">{{ biscoitos }}</span>
+      <span class="carteira" :aria-label="`${moedas} moedas`">
+        <IconePixel nome="moeda" />
+        <span class="numero">{{ moedas }}</span>
       </span>
     </template>
 
@@ -68,15 +68,15 @@ function comprar(item: ItemLoja) {
 
     <ul class="itens">
       <LinhaItem v-for="item in itens" :key="item.id" :item="item">
-        <span class="pilula" :aria-label="`${item.preco} biscoitos`">
-          <IconePixel nome="biscoito" />
+        <span class="pilula" :aria-label="`${item.preco} moedas`">
+          <IconePixel nome="moeda" />
           <span class="numero">{{ item.preco }}</span>
         </span>
         <button
           class="button button-primary"
           :class="{ confirmado: idConfirmado === item.id }"
           type="button"
-          :disabled="biscoitos < item.preco && idConfirmado !== item.id"
+          :disabled="moedas < item.preco && idConfirmado !== item.id"
           :aria-label="`Comprar ${item.nome}`"
           @click="comprar(item)"
         >

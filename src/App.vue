@@ -123,35 +123,36 @@ watch(periodo, (agora) => localStorage.setItem('periodo', agora))
 const agora = ref(new Date())
 const noite = computed(() => ehNoite(agora.value, periodo.value))
 
-// ============ biscoitos ============
-// os biscoitos são de quem joga, não de um bicho só
-const biscoitos = ref(Number(localStorage.getItem('biscoitos') ?? 0))
-watch(biscoitos, (quantos) => localStorage.setItem('biscoitos', String(quantos)))
+// ============ moedas ============
+// as moedas são de quem joga, não de um bicho só.
+// Ficam salvas com o nome 'biscoitos' (a moeda era o biscoito no começo): assim ninguém perde as suas
+const moedas = ref(Number(localStorage.getItem('biscoitos') ?? 0))
+watch(moedas, (quantas) => localStorage.setItem('biscoitos', String(quantas)))
 
-// abaixo disso, a barra "estava precisando de verdade": só aí cuidar rende biscoito
-// (biscoito custa a ganhar, pra loja e os pets raros terem valor)
+// abaixo disso, a barra "estava precisando de verdade": só aí cuidar rende moeda
+// (moeda custa a ganhar, pra loja e os pets raros terem valor)
 const PRECISANDO = 50
 
-// bônus do dia: a primeira visita de cada dia ganha alguns biscoitos
+// bônus do dia: a primeira visita de cada dia ganha algumas moedas
 const BONUS_DO_DIA = 5
 const hoje = new Date().toLocaleDateString('pt-BR')
 const ganhouBonus = ref(false)
 if (localStorage.getItem('ultimoBonus') !== hoje) {
-  biscoitos.value += BONUS_DO_DIA
+  moedas.value += BONUS_DO_DIA
   localStorage.setItem('ultimoBonus', hoje)
   ganhouBonus.value = true
   setTimeout(() => (ganhouBonus.value = false), 6000)
 }
 
 // ============ cuidados ============
-// sobe uma barra do bicho aberto; se ela estava precisando, ganha 1 biscoito
+// sobe uma barra do bicho aberto; se ela estava precisando, ganha 1 moeda
 function cuidar(chave: keyof Status, quanto: number) {
   const bicho = bichoAtual.value
   if (bicho === null) {
     return
   }
   if (bicho.status[chave] < PRECISANDO) {
-    biscoitos.value++
+    moedas.value++
   }
   bicho.status[chave] = limitar(bicho.status[chave] + quanto)
 }
@@ -206,15 +207,15 @@ function quandoCarinho() {
   bicho.contadores.carinhos++
 }
 
-// minijogo: cada acerto vale 1 biscoito; alegra e cansa
-function quandoJogou(acertos: number) {
+// jogos: o que eles renderam em moedas; alegra e cansa
+function quandoJogou(ganhas: number) {
   const bicho = bichoAtual.value
   if (bicho === null) return
-  biscoitos.value += acertos
+  moedas.value += ganhas
   tocar('fimDoJogo')
   bicho.status.felicidade = limitar(bicho.status.felicidade + 15)
   bicho.status.energia = limitar(bicho.status.energia - 10)
-  bicho.contadores.biscoitosNoJogo += acertos
+  bicho.contadores.biscoitosNoJogo += ganhas
   bicho.contadores.brincou++
 }
 
@@ -242,7 +243,7 @@ const TEMPO_PRA_ADOECER = 30 * 60
 const lojaAberta = ref(false)
 const mochilaAberta = ref(false)
 
-// a mochila é de quem joga (como os biscoitos): quantos de cada item, { sache: 2, bolinha: 1 }
+// a mochila é de quem joga (como as moedas): quantos de cada item, { sache: 2, bolinha: 1 }
 const mochilaSalva = localStorage.getItem('mochila')
 const mochila = ref<Record<string, number>>(mochilaSalva ? JSON.parse(mochilaSalva) : {})
 // o sabonete saiu da loja (gato não toma banho): quem tinha ganha a mesma quantidade de areia
@@ -254,10 +255,10 @@ watch(mochila, (agora) => localStorage.setItem('mochila', JSON.stringify(agora))
 
 // comprar: paga e guarda na mochila (depois a pessoa escolhe pra quem dar)
 function comprar(item: ItemLoja) {
-  if (biscoitos.value < item.preco) {
+  if (moedas.value < item.preco) {
     return
   }
-  biscoitos.value -= item.preco
+  moedas.value -= item.preco
   tocar('comprar')
   mochila.value[item.id] = (mochila.value[item.id] ?? 0) + 1
 }
@@ -387,14 +388,14 @@ watch(
   <main class="jogo">
     <!-- o bônus do dia aparece uns segundos, em cima, sem tapar os botões -->
     <p v-if="ganhouBonus" class="bonus" role="status">
-      <IconePixel nome="biscoito" />
-      Bônus do dia: <span class="numero">+{{ BONUS_DO_DIA }}</span> biscoitos!
+      <IconePixel nome="moeda" />
+      Bônus do dia: <span class="numero">+{{ BONUS_DO_DIA }}</span> moedas!
     </p>
 
     <Tamagochi
       v-if="tela === 'pet' && bichoAtual !== null"
       :bicho="bichoAtual"
-      :biscoitos="biscoitos"
+      :moedas="moedas"
       :itens-na-mochila="itensNaMochila"
       :noite="noite"
       :doente="bichoAtual.doente"
@@ -423,7 +424,7 @@ watch(
     <!-- fica fora da corrente v-if / v-else-if / v-else das telas: ela abre POR CIMA da tela do pet -->
     <LojaModal
       v-if="lojaAberta && bichoAtual !== null"
-      :biscoitos="biscoitos"
+      :moedas="moedas"
       :bicho="bichoAtual"
       @comprou="comprar"
       @fechou="lojaAberta = false"

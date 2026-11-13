@@ -27,7 +27,7 @@ export type ItemLoja = {
   cor: string
 }
 
-// biscoito custa a ganhar (só quando o bicho precisava de verdade + o bônus do dia),
+// moeda custa a ganhar (só quando o bicho precisava de verdade + o bônus do dia),
 // então os preços contam: mais caro = enche mais. Os botões de cuidar continuam de graça.
 export const ITENS_DA_LOJA: ItemLoja[] = [
   {

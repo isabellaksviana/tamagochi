@@ -8,7 +8,7 @@ import type { Bicho } from '../tipos'
 
 // "Chuva de petiscos": os petiscos caem do céu e você move o bicho pros lados pra pegar.
 // Sem tempo: são 5 vidas, e cada petisco que cai no chão tira uma. Começa devagar e acelera
-// a cada ponto. A cada 10 pontos, 1 biscoito (no máximo 5 por partida). E tem recorde!
+// a cada ponto. A cada 10 pontos, 1 moeda (no máximo 5 por partida). E tem recorde!
 const props = defineProps<{
   bicho: Bicho
 }>()
@@ -16,12 +16,12 @@ const props = defineProps<{
 const emit = defineEmits<{
   // avisa a tela que a partida começou/acabou (o visor esconde o bicho de sempre)
   jogando: [ligado: boolean]
-  terminou: [biscoitos: number]
+  terminou: [moedas: number]
 }>()
 
 const VIDAS = 5
-const PONTOS_POR_BISCOITO = 10
-const MAXIMO_DE_BISCOITOS = 5
+const PONTOS_POR_MOEDA = 10
+const MAXIMO_DE_MOEDAS = 5
 // posições em % da largura/altura da telinha
 const VELOCIDADE_DO_GATO = 70 // % por segundo
 // onde o petisco encontra a cabeça do bicho (o topo do petisco, em % da altura da telinha)
@@ -45,7 +45,7 @@ const pegouAgora = ref(false)
 const recorde = ref(Number(localStorage.getItem('recordeChuva') ?? 0))
 const bateuRecorde = ref(false)
 
-const biscoitosGanhos = computed(() => Math.min(MAXIMO_DE_BISCOITOS, Math.floor(pontos.value / PONTOS_POR_BISCOITO)))
+const moedasGanhas = computed(() => Math.min(MAXIMO_DE_MOEDAS, Math.floor(pontos.value / PONTOS_POR_MOEDA)))
 
 // pra onde o gato está andando: -1 esquerda, 0 parado, 1 direita
 let direcao = 0
@@ -128,7 +128,7 @@ function terminar() {
   }
   emit('jogando', false)
   tocar('fimDoJogo')
-  emit('terminou', biscoitosGanhos.value)
+  emit('terminou', moedasGanhas.value)
 }
 
 // ============ controles: botões (segurar), teclado e toque nos lados da telinha ============
@@ -174,7 +174,7 @@ onUnmounted(() => {
     <template v-if="etapa === 'inicio'">
       <p>
         Mexa {{ bicho.nome }} pros lados pra pegar os petiscos. São {{ VIDAS }} vidas: cada petisco que cai no chão
-        tira uma. Começa devagar e vai acelerando. A cada {{ PONTOS_POR_BISCOITO }} pontos, 1 biscoito.
+        tira uma. Começa devagar e vai acelerando. A cada {{ PONTOS_POR_MOEDA }} pontos, 1 moeda.
       </p>
       <p v-if="recorde > 0" class="recorde">Recorde: <span class="numero">{{ recorde }}</span> pontos</p>
       <p v-if="bicho.status.energia < 20" class="aviso">Cansado demais pra brincar. Apague a luz um pouquinho.</p>
@@ -243,8 +243,8 @@ onUnmounted(() => {
       <p v-if="bateuRecorde" class="recorde novo">Recorde novo!</p>
       <p v-else class="recorde">Recorde: <span class="numero">{{ recorde }}</span> pontos</p>
       <p class="ganho">
-        <IconePixel nome="biscoito" />
-        <span class="numero">+{{ biscoitosGanhos }}</span> {{ biscoitosGanhos === 1 ? 'biscoito' : 'biscoitos' }}
+        <IconePixel nome="moeda" />
+        <span class="numero">+{{ moedasGanhas }}</span> {{ moedasGanhas === 1 ? 'moeda' : 'moedas' }}
       </p>
       <button class="button button-primary grande" type="button" :disabled="bicho.status.energia < 20" @click="comecar">Jogar de novo</button>
     </template>

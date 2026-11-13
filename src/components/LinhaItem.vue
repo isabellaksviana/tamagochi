@@ -16,7 +16,7 @@ defineProps<{
     <span class="texto">
       <strong>{{ item.nome }}</strong>
       <span class="descricao">{{ item.descricao }}</span>
-      <!-- o que o item faz, antes de gastar os biscoitos: "+50 Fome" -->
+      <!-- o que o item faz, antes de gastar as moedas: "+50 Fome" -->
       <span class="efeitos" :aria-label="`Efeito: ${efeitosDo(item).map((e) => `+${e.quanto} de ${e.barra.rotulo}`).join(', ')}`">
         <span v-if="item.cura" class="efeito cura" aria-hidden="true">
           <IconePixel nome="remedio" />

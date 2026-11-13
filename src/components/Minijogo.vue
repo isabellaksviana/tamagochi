@@ -5,7 +5,7 @@ import { comecarMusica, pararMusica, tocar } from '../som'
 import type { Expressao } from './bicho/cores'
 
 // "Pra que lado?", o clássico do tamagochi: você chuta um lado, o gato olha pra um lado.
-// Acertou, ganha 1 biscoito. São 5 rodadas.
+// Acertou, ganha 1 moeda. São 5 rodadas.
 const props = defineProps<{
   nome: string
   energia: number
@@ -72,7 +72,7 @@ onUnmounted(() => {
     <h2>Pra que lado?</h2>
 
     <template v-if="etapa === 'inicio'">
-      <p>Adivinhe pra que lado {{ props.nome }} vai olhar. São {{ RODADAS }} rodadas, e cada acerto vale 1 biscoito.</p>
+      <p>Adivinhe pra que lado {{ props.nome }} vai olhar. São {{ RODADAS }} rodadas, e cada acerto vale 1 moeda.</p>
       <p v-if="props.energia < 20" class="aviso">Cansado demais pra brincar. Apague a luz um pouquinho.</p>
       <button class="button button-primary grande" type="button" :disabled="props.energia < 20" @click="comecar">
         <IconePixel nome="controle" />
@@ -102,8 +102,8 @@ onUnmounted(() => {
         {{ acertos >= 3 ? `${props.nome} adorou brincar.` : 'Fica pra próxima.' }}
       </p>
       <p class="ganho">
-        <IconePixel nome="biscoito" />
-        <span class="numero">+{{ acertos }}</span> {{ acertos === 1 ? 'biscoito' : 'biscoitos' }}
+        <IconePixel nome="moeda" />
+        <span class="numero">+{{ acertos }}</span> {{ acertos === 1 ? 'moeda' : 'moedas' }}
       </p>
       <button class="button button-primary grande" type="button" :disabled="props.energia < 20" @click="comecar">Jogar de novo</button>
     </template>
