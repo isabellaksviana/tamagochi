@@ -54,7 +54,17 @@ function dar(item: ItemLoja) {
         <span class="pilula" :aria-label="`${guardado.quantos} na mochila`">
           × <span class="numero">{{ guardado.quantos }}</span>
         </span>
+        <!-- o remédio só serve pra quem está doente: com o bicho bem, o botão avisa e não gasta -->
         <button
+          v-if="guardado.item.cura && !bicho.doente && idConfirmado !== guardado.item.id"
+          class="button"
+          type="button"
+          disabled
+        >
+          {{ bicho.nome }} não está doente
+        </button>
+        <button
+          v-else
           class="button button-primary"
           :class="{ confirmado: idConfirmado === guardado.item.id }"
           type="button"
