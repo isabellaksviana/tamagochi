@@ -65,8 +65,35 @@ function comecar() {
   bateuRecorde.value = false
   tempoPraProximo = 0.5
   ultimoQuadro = performance.now()
+  pausado.value = false
   comecarMusica()
   quadro = requestAnimationFrame(passo)
+}
+
+// ============ pausa ============
+// pausado: os petiscos ficam parados no ar e a música para, até continuar
+const pausado = ref(false)
+
+function pausar() {
+  if (etapa.value !== 'jogando' || pausado.value) return
+  pausado.value = true
+  cancelAnimationFrame(quadro)
+  pararMusica()
+  direcao = 0
+}
+
+function continuar() {
+  if (etapa.value !== 'jogando' || !pausado.value) return
+  pausado.value = false
+  // o relógio recomeça de agora (senão o tempo pausado viraria um "pulo" gigante)
+  ultimoQuadro = performance.now()
+  comecarMusica()
+  quadro = requestAnimationFrame(passo)
+}
+
+// saiu da aba ou do app no meio da partida: pausa sozinho
+function quandoSumir() {
+  if (document.hidden) pausar()
 }
 
 // um "quadro" do jogo (umas 60 vezes por segundo): anda, cai, pega
@@ -138,6 +165,12 @@ function andar(novaDirecao: number) {
 
 function teclaApertada(evento: KeyboardEvent) {
   if (etapa.value !== 'jogando') return
+  // P ou Esc: pausa / continua
+  if (evento.key === 'p' || evento.key === 'P' || evento.key === 'Escape') {
+    evento.preventDefault()
+    return pausado.value ? continuar() : pausar()
+  }
+  if (pausado.value) return
   if (evento.key === 'ArrowLeft') andar(-1)
   if (evento.key === 'ArrowRight') andar(1)
 }
@@ -149,6 +182,7 @@ function teclaSolta(evento: KeyboardEvent) {
 
 // tocar/clicar na metade esquerda ou direita da telinha
 function tocarNaTela(evento: PointerEvent) {
+  if (pausado.value) return
   const caixa = (evento.currentTarget as HTMLElement).getBoundingClientRect()
   andar(evento.clientX < caixa.left + caixa.width / 2 ? -1 : 1)
 }
@@ -156,6 +190,7 @@ function tocarNaTela(evento: PointerEvent) {
 onMounted(() => {
   window.addEventListener('keydown', teclaApertada)
   window.addEventListener('keyup', teclaSolta)
+  document.addEventListener('visibilitychange', quandoSumir)
 })
 onUnmounted(() => {
   cancelAnimationFrame(quadro)
@@ -164,6 +199,7 @@ onUnmounted(() => {
   emit('jogando', false)
   window.removeEventListener('keydown', teclaApertada)
   window.removeEventListener('keyup', teclaSolta)
+  document.removeEventListener('visibilitychange', quandoSumir)
 })
 </script>
 
@@ -191,6 +227,15 @@ onUnmounted(() => {
         <span class="vidas" :aria-label="`${vidas} de ${VIDAS} vidas`">
           <IconePixel v-for="n in VIDAS" :key="n" nome="coracao" :class="{ perdida: n > vidas }" />
         </span>
+        <button
+          class="button so-icone pausa"
+          type="button"
+          :aria-label="pausado ? 'Continuar' : 'Pausar'"
+          :title="pausado ? 'Continuar (P)' : 'Pausar (P)'"
+          @click="pausado ? continuar() : pausar()"
+        >
+          <IconePixel :nome="pausado ? 'play' : 'pausa'" :escala="3" />
+        </button>
       </p>
 
       <!-- o jogo acontece DENTRO do visor de LCD (o Teleport leva este pedaço pra lá).
@@ -209,6 +254,11 @@ onUnmounted(() => {
           <span class="gato" :style="{ left: `${gatoX}%` }">
             <DesenhoBicho :especie="bicho.especie" :cor="bicho.cor" :expressao="pegouAgora ? 'feliz' : 'surpreso'" />
           </span>
+          <!-- pausado: o aviso no meio da telinha (tocar nele continua) -->
+          <button v-if="pausado" class="aviso-pausa" type="button" @pointerdown.stop @click="continuar">
+            Pausado
+            <small>toque pra continuar</small>
+          </button>
         </div>
       </Teleport>
 
@@ -216,6 +266,7 @@ onUnmounted(() => {
         <button
           class="button lado"
           type="button"
+          :disabled="pausado"
           aria-label="Andar pra esquerda"
           @pointerdown="andar(-1)"
           @pointerup="andar(0)"
@@ -227,6 +278,7 @@ onUnmounted(() => {
         <button
           class="button lado"
           type="button"
+          :disabled="pausado"
           aria-label="Andar pra direita"
           @pointerdown="andar(1)"
           @pointerup="andar(0)"
@@ -295,6 +347,33 @@ p {
 
 .vidas {
   gap: 3px !important;
+}
+
+.pausa {
+  width: 2.25rem;
+  min-height: 2.25rem;
+}
+
+/* o aviso de pausa no meio do visor */
+.aviso-pausa {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: var(--space-1);
+  font-family: var(--font-pixel);
+  font-size: 1.4rem;
+  color: var(--text);
+  background: color-mix(in srgb, var(--lcd) 70%, transparent);
+  border: none;
+  cursor: pointer;
+}
+
+.aviso-pausa small {
+  font-family: var(--font);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-muted);
 }
 
 /* vida perdida: o coraçãozinho fica apagado */

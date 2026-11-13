@@ -70,6 +70,8 @@ export const ICONES = {
   fechar: ['TT...TT', 'TTT.TTT', '.TTTTT.', '..TTT..', '.TTTTT.', 'TTT.TTT', 'TT...TT'],
   mais: ['..TTT..', '..TTT..', 'TTTTTTT', 'TTTTTTT', 'TTTTTTT', '..TTT..', '..TTT..'],
   certo: ['......TT', '.....TTT', 'TT..TTT.', 'TTTTTT..', '.TTTT...', '..TT....'],
+  pausa: ['TT.TT', 'TT.TT', 'TT.TT', 'TT.TT', 'TT.TT', 'TT.TT', 'TT.TT'],
+  play: ['T....', 'TT...', 'TTT..', 'TTTT.', 'TTT..', 'TT...', 'T....'],
 
   // ---------- itens da loja ----------
   sache: ['.K.K.K.K.', 'KAAAAAAAK', 'KAhAAAAAK', 'KAAAAAAAK', 'KAWWWWWAK', 'KAWBBBWAK', 'KAWWWWWAK', 'KAAAAAAAK', 'KAAAAAAAK', '.KKKKKKK.'],
