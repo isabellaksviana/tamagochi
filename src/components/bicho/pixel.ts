@@ -1,4 +1,4 @@
-import type { CorGato, Expressao } from './cores'
+import type { CorGato, Especie, Expressao } from './cores'
 
 // o gato em pixel art: uma grade de 45 × 49 quadradinhos, montada parte por parte
 // (rabo, corpo, patas, orelhas, cabeça) e com o rosto desenhado pixel por pixel
@@ -17,6 +17,10 @@ type Pelagem = {
   // o traço do rosto (olho fechado, boca) e a cor do olho aberto
   traco: string
   olho: string
+  // bigode: o do gato é comprido, o do coelho é curtinho; capivara e tartaruga não têm
+  bigode?: 'longo' | 'curto' | 'nenhum'
+  // a cor do nariz (a capivara tem o narizão escuro)
+  nariz?: string
 }
 
 const PELAGENS: Record<CorGato, Pelagem> = {
@@ -51,8 +55,8 @@ const RAIVA = '#E5484D'
 type Ponto = [number, number]
 export type Grade = (string | null)[][]
 
-export function gatoEmPixel(cor: CorGato, expressao: Expressao): Grade {
-  const p = PELAGENS[cor]
+// as ferramentas de desenho, iguais pra todos os bichos: uma grade vazia e jeitos de pintar nela
+function ferramentas(contorno: string) {
   const g: Grade = Array.from({ length: ALTURA }, () => Array<string | null>(LARGURA).fill(null))
 
   const pinta = (x: number, y: number, c: string) => {
@@ -62,14 +66,14 @@ export function gatoEmPixel(cor: CorGato, expressao: Expressao): Grade {
   // o mesmo desenho dos dois lados do rosto (o centro da cabeça é x = 21)
   const espelho = (pontos: Ponto[]): Ponto[] => [...pontos, ...pontos.map(([x, y]): Ponto => [42 - x, y])]
 
-  // uma parte do gato: primeiro o contorno de 1 pixel em volta, depois o recheio
+  // uma parte do bicho: primeiro o contorno de 1 pixel em volta, depois o recheio
   function parte(dentro: (x: number, y: number) => boolean, recheio: (x: number, y: number) => string) {
     const s = new Set<number>()
     for (let y = 0; y < ALTURA; y++) for (let x = 0; x < LARGURA; x++) if (dentro(x, y)) s.add(y * LARGURA + x)
     const tem = (x: number, y: number) => x >= 0 && y >= 0 && x < LARGURA && y < ALTURA && s.has(y * LARGURA + x)
     for (let y = 0; y < ALTURA; y++) {
       for (let x = 0; x < LARGURA; x++) {
-        if (!tem(x, y) && (tem(x - 1, y) || tem(x + 1, y) || tem(x, y - 1) || tem(x, y + 1))) pinta(x, y, p.contorno)
+        if (!tem(x, y) && (tem(x - 1, y) || tem(x + 1, y) || tem(x, y - 1) || tem(x, y + 1))) pinta(x, y, contorno)
       }
     }
     for (const i of s) pinta(i % LARGURA, Math.floor(i / LARGURA), recheio(i % LARGURA, Math.floor(i / LARGURA)))
@@ -83,6 +87,20 @@ export function gatoEmPixel(cor: CorGato, expressao: Expressao): Grade {
     const d3 = lado(c, a)
     return !((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0))
   }
+  return { g, pinta, pintaVarios, espelho, parte, elipse, triangulo }
+}
+
+// o desenho de qualquer bicho: cada espécie tem o seu corpo; o rosto é o mesmo pra todos
+export function bichoEmPixel(especie: Especie, cor: CorGato, expressao: Expressao): Grade {
+  if (especie === 'coelho') return coelhoEmPixel(cor, expressao)
+  if (especie === 'capivara') return capivaraEmPixel(cor, expressao)
+  if (especie === 'tartaruga') return tartarugaEmPixel(cor, expressao)
+  return gatoEmPixel(cor, expressao)
+}
+
+function gatoEmPixel(cor: CorGato, expressao: Expressao): Grade {
+  const p = PELAGENS[cor]
+  const { g, pinta, pintaVarios, espelho, parte, elipse, triangulo } = ferramentas(p.contorno)
 
   // ---------- rabo: bolinhas ao longo de uma curva, com listras ----------
   const curva: [number, number, number][] = []
@@ -171,13 +189,17 @@ function desenharRosto(
   const bochecha: Ponto[] = []
   for (let x = 9; x < 12; x++) bochecha.push([x, 23], [x, 24])
   pintaVarios(BOCHECHA, espelho(bochecha))
-  pintaVarios(NARIZ, [[20, 23], [21, 23], [22, 23], [21, 24]])
+  pintaVarios(p.nariz ?? NARIZ, [[20, 23], [21, 23], [22, 23], [21, 24]])
 
   // bigodes
-  const bigode: Ponto[] = []
-  for (let x = 0; x <= 5; x++) bigode.push([x, 22], [x, 25])
-  // no gato preto, o bigode é clarinho (marrom sumiria no pelo)
-  pintaVarios(p.olho === PUPILA ? p.contorno : '#9A8E9E', espelho(bigode))
+  const tipoDeBigode = p.bigode ?? 'longo'
+  if (tipoDeBigode !== 'nenhum') {
+    const bigode: Ponto[] = []
+    const inicio = tipoDeBigode === 'longo' ? 0 : 3
+    for (let x = inicio; x <= 5; x++) bigode.push([x, 22], [x, 25])
+    // no bicho preto, o bigode é clarinho (marrom sumiria no pelo)
+    pintaVarios(p.olho === PUPILA ? p.contorno : '#9A8E9E', espelho(bigode))
+  }
 
   switch (expressao) {
     case 'feliz':
@@ -262,6 +284,144 @@ function desenharRosto(
       pintaVarios(RAIVA, [[39, 3], [41, 3], [38, 4], [42, 4], [38, 6], [42, 6], [39, 7], [41, 7]])
       break
   }
+}
+
+// ============ coelho ============
+// orelhas compridas, pompom no rabinho, bigodinho curto. "tricolor" = malhado
+const PELAGENS_COELHO: Record<CorGato, Pelagem> = {
+  laranja: { contorno: '#5B3A36', pelo: '#EBC59D', orelha: '#FFBCC8', traco: '#5B3A36', olho: PUPILA, bigode: 'curto' },
+  preto: { contorno: '#1F1A21', pelo: '#3E3540', orelha: '#F4A7B0', traco: '#FFE8D6', olho: '#F2C94C', bigode: 'curto' },
+  branco: { contorno: '#5B3A36', pelo: '#FFFBF7', orelha: '#FFBCC8', traco: '#5B3A36', olho: PUPILA, bigode: 'curto' },
+  cinza: { contorno: '#5B3A36', pelo: '#D6CFD2', orelha: '#FFBCC8', traco: '#5B3A36', olho: PUPILA, bigode: 'curto' },
+  tricolor: {
+    contorno: '#5B3A36',
+    pelo: '#FFF8F0',
+    manchaEsquerda: '#EBC59D',
+    manchaDireita: '#8E7F8C',
+    orelha: '#FFBCC8',
+    traco: '#5B3A36',
+    olho: PUPILA,
+    bigode: 'curto',
+  },
+}
+
+function coelhoEmPixel(cor: CorGato, expressao: Expressao): Grade {
+  const p = PELAGENS_COELHO[cor]
+  const { g, pinta, pintaVarios, espelho, parte, elipse } = ferramentas(p.contorno)
+
+  // pompom do rabinho (aparece do lado direito do corpo)
+  parte(elipse(33, 42, 3.4, 3.2), () => '#FFFFFF')
+
+  // corpo
+  parte(elipse(21, 39, 10, 8.5), (x, y) => (p.manchaEsquerda && (x - 13) ** 2 + (y - 43) ** 2 <= 22 ? p.manchaEsquerda : p.pelo))
+
+  // patinhas
+  parte(elipse(16, 45, 3.6, 2.2), () => p.pelo)
+  parte(elipse(26, 45, 3.6, 2.2), () => p.pelo)
+  pintaVarios(p.contorno, [[15, 46], [17, 46], [25, 46], [27, 46]])
+
+  // orelhas compridas, com o rosinha por dentro
+  parte(elipse(14, 9, 3.6, 9.5), () => p.manchaEsquerda ?? p.pelo)
+  parte(elipse(28, 9, 3.6, 9.5), () => p.manchaDireita ?? p.pelo)
+  const dentro = (cx: number) => elipse(cx, 9, 1.6, 6.5)
+  for (let y = 0; y < ALTURA; y++) for (let x = 0; x < LARGURA; x++) if (dentro(14)(x, y) || dentro(28)(x, y)) pinta(x, y, p.orelha)
+
+  // cabeça redondinha
+  parte(elipse(21, 22, 15, 11.5), (x, y) => {
+    if (p.manchaEsquerda && (x - 9) ** 2 + (y - 16) ** 2 <= 40) return p.manchaEsquerda
+    if (p.manchaDireita && (x - 34) ** 2 + (y - 17) ** 2 <= 30) return p.manchaDireita
+    return p.pelo
+  })
+
+  desenharRosto(expressao, p, pintaVarios, espelho)
+  return g
+}
+
+// ============ capivara ============
+// cabeça quadradona, focinho grande, narizão escuro e orelhinhas redondas.
+// "tricolor" = capivara com uma laranjinha na cabeça (clássico!)
+type PelagemCapivara = Pelagem & { focinho: string; laranjinha?: boolean }
+const BASE_CAPIVARA = { contorno: '#5B3A36', traco: '#3A2520', olho: PUPILA, bigode: 'nenhum', nariz: '#3A2520' } as const
+const PELAGENS_CAPIVARA: Record<CorGato, PelagemCapivara> = {
+  laranja: { ...BASE_CAPIVARA, pelo: '#C9915F', focinho: '#B07C50', orelha: '#A9734A' },
+  preto: { ...BASE_CAPIVARA, contorno: '#2E1E18', pelo: '#7A5640', focinho: '#664632', orelha: '#553827', traco: '#2E1E18' },
+  branco: { ...BASE_CAPIVARA, pelo: '#E3C9A6', focinho: '#D2B48D', orelha: '#C9A57E' },
+  cinza: { ...BASE_CAPIVARA, pelo: '#ADA197', focinho: '#988C82', orelha: '#8B8077' },
+  tricolor: { ...BASE_CAPIVARA, pelo: '#C9915F', focinho: '#B07C50', orelha: '#A9734A', laranjinha: true },
+}
+
+function capivaraEmPixel(cor: CorGato, expressao: Expressao): Grade {
+  const p = PELAGENS_CAPIVARA[cor]
+  const { g, pinta, pintaVarios, espelho, parte, elipse } = ferramentas(p.contorno)
+
+  // corpo largo e baixinho
+  parte(elipse(21, 40, 14, 7.5), () => p.pelo)
+
+  // patinhas
+  parte(elipse(13, 46, 3.4, 2), () => p.pelo)
+  parte(elipse(29, 46, 3.4, 2), () => p.pelo)
+
+  // orelhinhas redondas
+  parte(elipse(8, 12, 3, 2.6), () => p.orelha)
+  parte(elipse(34, 12, 3, 2.6), () => p.orelha)
+
+  // a cabeça quadradona (um "retângulo arredondado": potência 4 em vez de 2)
+  parte(
+    (x, y) => ((x - 21) / 18) ** 4 + ((y - 22) / 12) ** 4 <= 1,
+    () => p.pelo,
+  )
+  // o focinho grandão, um tom mais escuro
+  const focinho = elipse(21, 27, 9, 5.5)
+  for (let y = 0; y < ALTURA; y++) for (let x = 0; x < LARGURA; x++) if (focinho(x, y)) pinta(x, y, p.focinho)
+
+  // a laranjinha na cabeça, com folhinha
+  if (p.laranjinha) {
+    parte(elipse(21, 7, 4, 3.5), () => '#F6A04D')
+    pintaVarios('#FFFFFF', [[19, 6]])
+    pintaVarios('#6DBB6A', [[22, 2], [23, 2], [23, 1], [24, 1]])
+  }
+
+  desenharRosto(expressao, p, pintaVarios, espelho)
+  return g
+}
+
+// ============ tartaruga ============
+// cabeça redonda em cima do casco; quem muda de cor é o casco
+type PelagemTartaruga = Pelagem & { casco: string; desenhoDoCasco: string }
+const BASE_TARTARUGA = { contorno: '#5B3A36', pelo: '#A7D99A', orelha: '#A7D99A', traco: '#3F5B3A', olho: PUPILA, bigode: 'nenhum' } as const
+const PELAGENS_TARTARUGA: Record<CorGato, PelagemTartaruga> = {
+  laranja: { ...BASE_TARTARUGA, casco: '#E8A55B', desenhoDoCasco: '#B9784F' },
+  preto: { ...BASE_TARTARUGA, casco: '#5A4D52', desenhoDoCasco: '#3E3540' },
+  branco: { ...BASE_TARTARUGA, casco: '#F0E6D2', desenhoDoCasco: '#CDBFA5' },
+  cinza: { ...BASE_TARTARUGA, casco: '#A9A3A6', desenhoDoCasco: '#7F7A7D' },
+  tricolor: { ...BASE_TARTARUGA, casco: '#C9B6F2', desenhoDoCasco: '#FF8FB0' },
+}
+
+function tartarugaEmPixel(cor: CorGato, expressao: Expressao): Grade {
+  const p = PELAGENS_TARTARUGA[cor]
+  const { g, pintaVarios, espelho, parte, elipse } = ferramentas(p.contorno)
+
+  // perninhas e rabinho (atrás do casco)
+  parte(elipse(8, 42, 3.5, 3), () => p.pelo)
+  parte(elipse(34, 42, 3.5, 3), () => p.pelo)
+  parte(elipse(14, 47, 3, 1.8), () => p.pelo)
+  parte(elipse(28, 47, 3, 1.8), () => p.pelo)
+  parte(elipse(38, 39, 2, 1.5), () => p.pelo)
+
+  // o casco, com o desenho de placas: um anel no meio, duas linhas dos lados e a borda de baixo
+  parte(elipse(21, 38, 15, 9.5), (x, y) => {
+    const anel = ((x - 21) / 7) ** 2 + ((y - 37) / 4.5) ** 2
+    if (anel >= 0.7 && anel <= 1.15) return p.desenhoDoCasco
+    if ((x === 12 || x === 30) && y >= 33 && y <= 42) return p.desenhoDoCasco
+    if (y >= 45) return p.desenhoDoCasco
+    return p.casco
+  })
+
+  // cabeça redonda, por cima do casco
+  parte(elipse(21, 20, 12.5, 10.5), () => p.pelo)
+
+  desenharRosto(expressao, p, pintaVarios, espelho)
+  return g
 }
 
 // ============ o ovo ============

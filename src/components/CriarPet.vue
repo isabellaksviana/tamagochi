@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import DesenhoBicho from './DesenhoBicho.vue'
 import BotaoTema from './BotaoTema.vue'
 import IconePixel from './IconePixel.vue'
-import type { CorGato, Especie } from './bicho/cores'
+import { NOME_DA_COR, NOME_DA_ESPECIE, type CorGato, type Especie } from './bicho/cores'
 
 // sem nenhum bicho ainda, não tem pra onde voltar: o botão some
 defineProps<{
@@ -15,13 +15,8 @@ const emit = defineEmits<{
   voltou: []
 }>()
 
-const CORES: { valor: CorGato; rotulo: string }[] = [
-  { valor: 'laranja', rotulo: 'Laranja' },
-  { valor: 'preto', rotulo: 'Preto' },
-  { valor: 'branco', rotulo: 'Branco' },
-  { valor: 'cinza', rotulo: 'Cinza' },
-  { valor: 'tricolor', rotulo: 'Tricolor' },
-]
+const ESPECIES: Especie[] = ['gato', 'coelho', 'capivara', 'tartaruga']
+const CORES: CorGato[] = ['laranja', 'preto', 'branco', 'cinza', 'tricolor']
 
 // o que a pessoa está escolhendo; o desenho grande lê daqui e muda ao vivo
 const especie = ref<Especie>('gato')
@@ -71,9 +66,17 @@ function adotar() {
       <form class="escolhas" @submit.prevent="adotar">
         <div class="grupo">
           <span class="titulo-grupo">Espécie</span>
-          <div>
-            <button class="especie" type="button" aria-pressed="true">
-              Gato
+          <div class="especies">
+            <button
+              v-for="opcao in ESPECIES"
+              :key="opcao"
+              class="cor"
+              type="button"
+              :aria-pressed="especie === opcao"
+              @click="especie = opcao"
+            >
+              <DesenhoBicho class="miniatura" :especie="opcao" :cor="cor" expressao="neutro" />
+              {{ NOME_DA_ESPECIE[opcao] }}
             </button>
           </div>
         </div>
@@ -83,14 +86,14 @@ function adotar() {
           <div class="cores">
             <button
               v-for="opcao in CORES"
-              :key="opcao.valor"
+              :key="opcao"
               class="cor"
               type="button"
-              :aria-pressed="cor === opcao.valor"
-              @click="cor = opcao.valor"
+              :aria-pressed="cor === opcao"
+              @click="cor = opcao"
             >
-              <DesenhoBicho class="miniatura" :especie="especie" :cor="opcao.valor" expressao="neutro" />
-              {{ opcao.rotulo }}
+              <DesenhoBicho class="miniatura" :especie="especie" :cor="opcao" expressao="neutro" />
+              {{ NOME_DA_COR[especie][opcao] }}
             </button>
           </div>
         </div>
@@ -210,6 +213,12 @@ function adotar() {
 .especie svg {
   width: 1rem;
   height: 1rem;
+}
+
+.especies {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
 }
 
 .cores {

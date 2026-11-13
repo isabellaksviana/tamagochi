@@ -234,12 +234,12 @@ onUnmounted(() => {
         <button class="cartao-jogo" type="button" @click="escolherJogo('lado')">
           <IconePixel nome="setaDireita" :escala="4" />
           <strong>Pra que lado?</strong>
-          <span>Adivinhe pra onde o gato vai olhar.</span>
+          <span>Adivinhe pra onde {{ bicho.nome }} vai olhar.</span>
         </button>
         <button class="cartao-jogo" type="button" @click="escolherJogo('chuva')">
           <IconePixel nome="peixe" :escala="4" />
           <strong>Chuva de petiscos</strong>
-          <span>Mexa o gato pra pegar o que cai do céu.</span>
+          <span>Mexa {{ bicho.nome }} pra pegar o que cai do céu.</span>
         </button>
       </div>
 

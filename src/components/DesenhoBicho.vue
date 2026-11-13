@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ALTURA, gatoEmPixel, LARGURA, retangulosDa } from './bicho/pixel'
+import { ALTURA, bichoEmPixel, LARGURA, retangulosDa } from './bicho/pixel'
 import type { CorGato, Especie, Expressao } from './bicho/cores'
 
 const props = defineProps<{
@@ -14,7 +14,7 @@ const props = defineProps<{
 }>()
 
 // cada quadradinho da grade vira um <rect>; vizinhos da mesma cor viram um só
-const retangulos = computed(() => retangulosDa(gatoEmPixel(props.cor, props.expressao)))
+const retangulos = computed(() => retangulosDa(bichoEmPixel(props.especie, props.cor, props.expressao)))
 
 // pra respirar, o desenho se divide em duas partes: a de cima (cabeça e peito), que desce
 // 1 pixel e volta, e a de baixo (barriga e patinhas), que fica parada no chão
