@@ -225,7 +225,7 @@ function terminar() {
               <IconePixel nome="moeda" />
             </span>
           </template>
-          <span class="bicho" :style="{ left: `${bichoX - 30}px`, top: `${bichoY - 65}px` }">
+          <span class="lugar-do-bicho" :style="{ left: `${bichoX - 30}px`, top: `${bichoY - 65}px` }">
             <DesenhoBicho :especie="bicho.especie" :cor="bicho.cor" :expressao="subindo ? 'feliz' : 'surpreso'" />
           </span>
           <AvisoPausa v-if="jogo.pausado.value" v-model:confirmando="jogo.confirmandoSaida.value" @continuar="jogo.continuar" @sair="sair" />
@@ -314,7 +314,7 @@ p {
 }
 
 .moeda,
-.bicho {
+.lugar-do-bicho {
   position: absolute;
 }
 
@@ -322,7 +322,7 @@ p {
   transform: translateX(-50%);
 }
 
-.bicho {
+.lugar-do-bicho {
   width: 60px;
 }
 

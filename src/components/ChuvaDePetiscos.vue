@@ -32,8 +32,8 @@ const MAXIMO_DE_MOEDAS = 5
 // posições em % da largura/altura da telinha
 const VELOCIDADE_NO_TECLADO = 75 // % por segundo
 const VELOCIDADE_NO_DEDO = 160 // % por segundo (o dedo é preciso: o bicho corre pra lá)
-const ALCANCE = 11 // quão longe do meio do bicho ainda conta como pego (em %)
 const ALTURA_DO_PETISCO = 24 // px
+const LARGURA_DO_PETISCO = 27 // px
 
 type Petisco = { id: number; x: number; y: number; icone: NomeIcone }
 const ICONES_DE_PETISCO: NomeIcone[] = ['peixe', 'biscoito', 'sache']
@@ -90,23 +90,30 @@ const jogo = useJogoNoVisor({
 
     for (const petisco of petiscos.value) petisco.y += velocidadeDaQueda * segundos
 
-    // a cabeça do bicho, medida de verdade (em pixels)
+    // o bicho, medido de verdade (em pixels): da cabeça (16% do desenho, abaixo das orelhas) às patinhas
     const desenho = desenhoDoBicho.value
+    const larguraDoBicho = desenho?.offsetWidth ?? 90
     const cabeca = desenho ? desenho.offsetTop + desenho.offsetHeight * 0.16 : altura - 102
-    const chao = desenho ? desenho.offsetTop + desenho.offsetHeight * 0.9 : altura - 30
+    const patas = desenho ? desenho.offsetTop + desenho.offsetHeight * 0.95 : altura - 25
+    const meioDoBicho = (bichoX.value / 100) * largura
 
-    // pegou: chegou na cabeça e está perto do bicho. Caiu no chão: perde uma vida
+    // pegou: o petisco encostou em QUALQUER parte do bicho (antes só valia uma faixa na altura da cabeça,
+    // e o petisco que já tinha passado dela atravessava o corpo sem contar).
+    // Passou das patinhas sem encostar: caiu no chão e perde uma vida
     const restantes: Petisco[] = []
     for (const petisco of petiscos.value) {
       const topo = (petisco.y / 100) * altura
-      const naCabeca = topo + ALTURA_DO_PETISCO >= cabeca && topo <= cabeca + 40
-      if (naCabeca && Math.abs(petisco.x - bichoX.value) < ALCANCE) {
+      const meioDoPetisco = (petisco.x / 100) * largura
+      const naAltura = topo + ALTURA_DO_PETISCO >= cabeca && topo <= patas
+      // de lado: as bordas se encostam (com uma folguinha de 6px pra não exigir pixel perfeito)
+      const deLado = Math.abs(meioDoPetisco - meioDoBicho) < larguraDoBicho / 2 + LARGURA_DO_PETISCO / 2 - 6
+      if (naAltura && deLado) {
         pontos.value++
         tocar('pegou')
         pegouAgora.value = true
         clearTimeout(relogioDoPegou)
         relogioDoPegou = setTimeout(() => (pegouAgora.value = false), 300)
-      } else if (topo >= chao) {
+      } else if (topo > patas) {
         vidas.value--
         tocar('errou')
       } else {
@@ -185,7 +192,7 @@ function sair() {
           <span v-for="petisco in petiscos" :key="petisco.id" class="petisco" :style="{ left: `${petisco.x}%`, top: `${petisco.y}%` }">
             <IconePixel :nome="petisco.icone" :escala="3" />
           </span>
-          <span ref="desenhoDoBicho" class="bicho" :style="{ left: `${bichoX}%` }">
+          <span ref="desenhoDoBicho" class="lugar-do-bicho" :style="{ left: `${bichoX}%` }">
             <DesenhoBicho :especie="bicho.especie" :cor="bicho.cor" :expressao="pegouAgora ? 'feliz' : 'surpreso'" />
           </span>
 
@@ -258,13 +265,13 @@ p {
 }
 
 .petisco,
-.bicho {
+.lugar-do-bicho {
   position: absolute;
   transform: translateX(-50%);
 }
 
 /* em pé no chão do visor; 90px = 2× o desenho, sem borrar */
-.bicho {
+.lugar-do-bicho {
   bottom: calc(var(--space-4) + 4px + env(safe-area-inset-bottom, 0px));
   width: 90px;
 }
