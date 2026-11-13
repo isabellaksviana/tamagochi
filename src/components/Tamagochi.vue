@@ -200,7 +200,7 @@ onUnmounted(() => {
       </ul>
 
       <p v-if="ehOvo" class="dica">Toque no ovo pra ajudar a chocar (ou espere um pouquinho).</p>
-      <p v-else-if="dormindo" class="dica">Psiu, {{ bicho.nome }} está dormindo. A energia sobe enquanto a luz estiver apagada (uns 10 minutinhos pra encher).</p>
+      <p v-else-if="dormindo" class="dica">Psiu, {{ bicho.nome }} está dormindo. A energia sobe enquanto a luz estiver apagada; quando encher (uns 10 minutinhos), ele acorda sozinho.</p>
       <p v-else-if="doente" class="dica alerta">{{ bicho.nome }} está doente! Compre um remédio na Lojinha e dê pela Mochila.</p>
       <p v-else-if="noite && bicho.status.energia < 50" class="dica">Já é noite e {{ bicho.nome }} está com sono. Que tal apagar a luz?</p>
 

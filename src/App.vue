@@ -343,8 +343,11 @@ function batida() {
     if (bicho.luzApagada) {
       // dormindo: a energia sobe e as outras barras não caem
       dormirUmPouco(bicho.status, ritmoDasBarras.value)
-      // de dia e descansado, acorda sozinho
-      if (bicho.status.energia >= 100 && !noite.value) bicho.luzApagada = false
+      // energia cheia: a luz acende e ele acorda sozinho (de dia ou de noite)
+      if (bicho.status.energia >= 100) {
+        bicho.luzApagada = false
+        if (bicho.id === idAberto.value) tocar('acenderLuz')
+      }
     } else {
       passarTempoAberto(bicho.status, ritmoDasBarras.value)
     }
