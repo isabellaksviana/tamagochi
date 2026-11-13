@@ -290,6 +290,10 @@ function daMochilaPraLoja() {
   lojaAberta.value = true
 }
 
+function quandoRenomear(nome: string) {
+  if (bichoAtual.value) bichoAtual.value.nome = nome
+}
+
 function quandoSoltou() {
   bichoSoltando.value = bichoAtual.value
 }
@@ -415,6 +419,7 @@ watch(
       @jogou="quandoJogou"
       @trocou-demo="demo = $event"
       @trocou-periodo="periodo = $event"
+      @renomeou="quandoRenomear"
     />
 
     <ListaPets v-else-if="tela === 'lista'" :bichos="bichos" @abriu="abrir" @adotar="tela = 'criar'" />

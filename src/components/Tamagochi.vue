@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import BotaoTema from './BotaoTema.vue'
 import BotaoSom from './BotaoSom.vue'
 import { tocar } from '../som'
@@ -40,7 +40,27 @@ const emit = defineEmits<{
   jogou: [acertos: number]
   trocouDemo: [ligado: boolean]
   trocouPeriodo: [periodo: Periodo]
+  renomeou: [nome: string]
 }>()
+
+// ============ trocar o nome ============
+const editandoNome = ref(false)
+const nomeNovo = ref('')
+const campoDoNome = ref<HTMLInputElement | null>(null)
+
+function editarNome() {
+  nomeNovo.value = props.bicho.nome
+  editandoNome.value = true
+  nextTick(() => campoDoNome.value?.select())
+}
+
+// salva só se sobrou algum nome (vazio, desiste e fica o antigo)
+function salvarNome() {
+  if (!editandoNome.value) return
+  const limpo = nomeNovo.value.trim()
+  if (limpo !== '' && limpo !== props.bicho.nome) emit('renomeou', limpo)
+  editandoNome.value = false
+}
 
 // ============ as abas de baixo ============
 type Aba = 'pet' | 'jogar' | 'diario'
@@ -157,7 +177,24 @@ onUnmounted(() => {
     </header>
 
     <div class="titulo">
-      <h1 class="nome">{{ bicho.nome }}</h1>
+      <!-- o nome dá pra trocar: o lapisinho abre o campo (Enter salva, Esc desiste) -->
+      <form v-if="editandoNome" class="editar-nome" @submit.prevent="salvarNome">
+        <input
+          ref="campoDoNome"
+          v-model="nomeNovo"
+          maxlength="20"
+          aria-label="Novo nome"
+          @keydown.esc="editandoNome = false"
+          @blur="salvarNome"
+        />
+        <button class="button button-primary" type="submit">Salvar</button>
+      </form>
+      <div v-else class="linha-nome">
+        <h1 class="nome">{{ bicho.nome }}</h1>
+        <button class="button so-icone lapis" type="button" :aria-label="`Trocar o nome de ${bicho.nome}`" title="Trocar o nome" @click="editarNome">
+          <IconePixel nome="lapis" />
+        </button>
+      </div>
       <p class="legenda">{{ legenda }}</p>
     </div>
 
@@ -329,6 +366,32 @@ onUnmounted(() => {
   margin: 0;
   font-size: 1.6rem;
   line-height: 1.2;
+}
+
+/* o nome com o lapisinho do lado */
+.linha-nome {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.lapis {
+  width: 2.25rem;
+  min-height: 2.25rem;
+  border-color: transparent;
+  background: transparent;
+}
+
+.editar-nome {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.editar-nome input {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-pixel);
 }
 
 .legenda {

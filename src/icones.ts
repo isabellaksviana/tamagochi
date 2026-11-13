@@ -60,6 +60,7 @@ export const ICONES = {
   controle: ['.KKKKKKKKK.', 'KLLLLLLLLLK', 'KLLKLLLLPLK', 'KLKKKLLPLPK', 'KLLKLLLLPLK', 'KLLLLLLLLLK', '.KKK...KKK.'],
   livro: ['.KKKKKKK.', 'KPPPPPPPK', 'KPKKKKKPK', 'KPPPPPPPK', 'KPKKKKPPK', 'KPPPPPPPK', 'KPPPPPPPK', 'KWWWWWWWK', '.KKKKKKK.'],
   remedio: ['.KKKKKKK.', 'KhPPPWWWK', 'KPPPPWWWK', '.KKKKKKK.'],
+  lapis: ['.....KK', '....KPK', '...KYK.', '..KYK..', '.KYK...', 'KOK....', 'KK.....'],
   // alto-falante com as ondinhas (som ligado) e com o X (mudo)
   som: ['...K.....', '..KK..T..', 'KKLK...T.', 'KLLK.T.T.', 'KLLK.T.T.', 'KKLK...T.', '..KK..T..', '...K.....'],
   mudo: ['...K.....', '..KK.....', 'KKLK.T.T.', 'KLLK..T..', 'KLLK.T.T.', 'KKLK.....', '..KK.....', '...K.....'],
