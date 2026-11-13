@@ -79,9 +79,9 @@ export function passarTempoFechado(status: Status, segundos: number) {
   }
 }
 
-// luz apagada: a energia sobe (cheia em ~10 minutos) e as outras barras param de cair.
-// Era 1 hora, mas quem jogou achou que demorava demais (a irmã e uma colega da Bella)
-const SONO_POR_SEGUNDO = 100 / (10 * 60)
+// luz apagada: a energia sobe (cheia em ~5 minutos) e as outras barras param de cair.
+// Era 1 hora, depois 10 minutos: quem jogou achou que demorava demais (a irmã e uma colega da Bella)
+const SONO_POR_SEGUNDO = 100 / (5 * 60)
 
 export function dormirUmPouco(status: Status, segundos: number) {
   status.energia = Math.min(100, status.energia + SONO_POR_SEGUNDO * segundos)
