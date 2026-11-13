@@ -56,8 +56,30 @@ function mostrarPor(expressao: Expressao, ms: number) {
   relogioDaVida = setTimeout(() => (vida.value = null), ms)
 }
 
+// ============ o balãozinho "Carinho?" ============
+// ninguém descobria sozinho que dava pra fazer carinho tocando no bicho (teste com as amigas
+// e a irmã da Bella): então, de tempos em tempos, ele mesmo pede
+const pedindoCarinho = ref(false)
+let relogioDoBalao = 0
+
+function pedirCarinho() {
+  pedindoCarinho.value = true
+  clearTimeout(relogioDoBalao)
+  relogioDoBalao = setTimeout(() => (pedindoCarinho.value = false), 6000)
+}
+
+// dá pra pedir? (não pede dormindo, no ovo, doente, no jogo ou no meio de uma reação)
+const podePedir = computed(
+  () => fase.value !== 'ovo' && !dormindo.value && !props.doente && !props.expressaoForcada && !props.jogando,
+)
+
 function batida() {
   segundo++
+  // pede logo no começo (pra ensinar) e depois de tempos em tempos; mais vezes se estiver tristinho
+  const intervaloDoPedido = props.bicho.status.felicidade < 60 ? 20 : 45
+  if (podePedir.value && !pedindoCarinho.value && (segundo === 3 || segundo % intervaloDoPedido === 0)) pedirCarinho()
+  if (!podePedir.value) pedindoCarinho.value = false
+
   if (props.expressaoForcada || dormindo.value || props.doente || vida.value) return
   // de noite, com sono e a luz acesa: boceja, pedindo pra apagar a luz
   if (props.noite && props.bicho.status.energia < 50 && segundo % 5 === 0) return mostrarPor('dormindo', 1200)
@@ -76,11 +98,13 @@ onUnmounted(() => {
   clearInterval(relogio)
   clearTimeout(relogioDaVida)
   clearTimeout(relogioDoCoracao)
+  clearTimeout(relogioDoBalao)
 })
 
 // tocar no gato = carinho (o coraçãozinho sobe)
 function tocarNoGato() {
   if (dormindo.value) return
+  pedindoCarinho.value = false
   emit('carinho')
   coracao.value = true
   mostrarPor('carinhoso', 1200)
@@ -120,6 +144,11 @@ const passeando = computed(() => fase.value !== 'ovo' && !dormindo.value && !pro
     >
       <DesenhoBicho :especie="bicho.especie" :cor="bicho.cor" :expressao="mostrada" respirando />
       <span v-if="coracao" class="coracao"><IconePixel nome="coracao" :escala="3" /></span>
+      <!-- o balãozinho de fala: ele mesmo pede carinho -->
+      <span v-if="pedindoCarinho" class="balao" aria-hidden="true">
+        Carinho?
+        <IconePixel nome="coracao" />
+      </span>
     </button>
 
     <!-- a caixinha de areia do canto: suja quando a higiene cai (o "cocô" do tamagochi) -->
@@ -307,6 +336,49 @@ const passeando = computed(() => fase.value !== 'ovo' && !dormindo.value && !pro
   to {
     transform: translateY(-24px);
     opacity: 0;
+  }
+}
+
+/* o balãozinho de fala, em pixel: borda grossa, cantos retos e a "pontinha" apontando pro bicho */
+/* um pouco abaixo do topo do desenho: no adulto, mais alto, ele tapava o relógio */
+.balao {
+  position: absolute;
+  top: 12%;
+  left: 78%;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  font-family: var(--font-pixel);
+  font-size: 0.8rem;
+  line-height: 1;
+  white-space: nowrap;
+  color: #5b3a36;
+  background: #fff8f0;
+  border: 2px solid #5b3a36;
+  border-radius: 4px;
+  animation: aparecer 0.5s steps(2) both;
+}
+
+.balao::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  bottom: -8px;
+  width: 8px;
+  height: 8px;
+  background: #fff8f0;
+  border-left: 2px solid #5b3a36;
+  border-bottom: 2px solid #5b3a36;
+  /* a pontinha em degrau (pixel), não um triângulo liso */
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
   }
 }
 
