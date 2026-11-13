@@ -15,7 +15,7 @@ const emit = defineEmits<{
   voltou: []
 }>()
 
-const ESPECIES: Especie[] = ['gato', 'coelho', 'capivara', 'tartaruga']
+const ESPECIES: Especie[] = ['gato', 'cachorro', 'coelho', 'capivara', 'tartaruga']
 const CORES: CorGato[] = ['laranja', 'preto', 'branco', 'cinza', 'tricolor']
 
 // o que a pessoa está escolhendo; o desenho grande lê daqui e muda ao vivo
@@ -217,7 +217,7 @@ function adotar() {
 
 .especies {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: var(--space-2);
 }
 

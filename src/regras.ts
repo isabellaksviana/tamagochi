@@ -20,6 +20,8 @@ export type Higiene = {
 
 export const HIGIENE: Record<Especie, Higiene> = {
   gato: { acao: 'Limpar caixinha', icone: 'caixinha', iconeSujo: 'caixinhaSuja', aviso: 'Caixinha suja' },
+  // cachorro toma banho de verdade (na banheirinha)
+  cachorro: { acao: 'Dar banho', icone: 'piscina', iconeSujo: 'piscinaSuja', aviso: 'Precisa de banho' },
   coelho: { acao: 'Limpar caixinha', icone: 'caixinhaFeno', iconeSujo: 'caixinhaFenoSuja', aviso: 'Caixinha suja' },
   capivara: { acao: 'Encher a piscininha', icone: 'piscina', iconeSujo: 'piscinaSuja', aviso: 'Piscininha suja' },
   tartaruga: { acao: 'Trocar a água', icone: 'agua', iconeSujo: 'aguaSuja', aviso: 'Água suja' },

@@ -95,6 +95,7 @@ export function bichoEmPixel(especie: Especie, cor: CorGato, expressao: Expressa
   if (especie === 'coelho') return coelhoEmPixel(cor, expressao)
   if (especie === 'capivara') return capivaraEmPixel(cor, expressao)
   if (especie === 'tartaruga') return tartarugaEmPixel(cor, expressao)
+  if (especie === 'cachorro') return cachorroEmPixel(cor, expressao)
   return gatoEmPixel(cor, expressao)
 }
 
@@ -419,6 +420,75 @@ function tartarugaEmPixel(cor: CorGato, expressao: Expressao): Grade {
 
   // cabeça redonda, por cima do casco
   parte(elipse(21, 20, 12.5, 10.5), () => p.pelo)
+
+  desenharRosto(expressao, p, pintaVarios, espelho)
+  return g
+}
+
+// ============ cachorro ============
+// orelhas caídas, focinho clarinho, narizão e o rabinho pra cima. "tricolor" = malhado (estilo beagle)
+type PelagemCachorro = Pelagem & { focinho: string; orelhaDeFora: string }
+const BASE_CACHORRO = { contorno: '#5B3A36', traco: '#5B3A36', olho: PUPILA, bigode: 'nenhum', nariz: '#3A2522' } as const
+const PELAGENS_CACHORRO: Record<CorGato, PelagemCachorro> = {
+  laranja: { ...BASE_CACHORRO, pelo: '#E3A66B', orelha: '#E3A66B', orelhaDeFora: '#B97A45', focinho: '#F6D6B0' },
+  preto: {
+    ...BASE_CACHORRO,
+    contorno: '#1F1A21',
+    pelo: '#3E3540',
+    orelha: '#3E3540',
+    orelhaDeFora: '#2A242C',
+    focinho: '#6B5E6E',
+    traco: '#FFE8D6',
+    olho: '#C98A4B',
+    nariz: '#1F1A21',
+  },
+  branco: { ...BASE_CACHORRO, pelo: '#FFFBF7', orelha: '#FFFBF7', orelhaDeFora: '#E8D5C4', focinho: '#FFFFFF' },
+  cinza: { ...BASE_CACHORRO, pelo: '#C4BCC0', orelha: '#C4BCC0', orelhaDeFora: '#8F878C', focinho: '#E6E0E3' },
+  tricolor: {
+    ...BASE_CACHORRO,
+    pelo: '#FFF8F0',
+    manchaEsquerda: '#C98A4B',
+    manchaDireita: '#C98A4B',
+    orelha: '#FFF8F0',
+    orelhaDeFora: '#7A5232',
+    focinho: '#FFFFFF',
+  },
+}
+
+function cachorroEmPixel(cor: CorGato, expressao: Expressao): Grade {
+  const p = PELAGENS_CACHORRO[cor]
+  const { g, pinta, pintaVarios, espelho, parte, elipse } = ferramentas(p.contorno)
+
+  // o rabinho pra cima, do lado direito (bolinhas ao longo de uma curva curtinha)
+  const rabo: [number, number][] = []
+  for (let t = 0; t <= 1; t += 0.05) rabo.push([29 + 7 * t, 42 - 11 * t + 3 * t * t])
+  parte(
+    (x, y) => rabo.some(([cx, cy]) => (x - cx) ** 2 + (y - cy) ** 2 <= 2.2 ** 2),
+    () => p.manchaDireita ?? p.pelo,
+  )
+
+  // corpo, com uma manchinha nas costas no malhado
+  parte(elipse(21, 38, 10, 9), (x, y) => (p.manchaDireita && (x - 28) ** 2 + (y - 36) ** 2 <= 20 ? p.manchaDireita : p.pelo))
+
+  // patinhas
+  parte(elipse(16, 45, 3.6, 2.2), () => p.pelo)
+  parte(elipse(26, 45, 3.6, 2.2), () => p.pelo)
+  pintaVarios(p.contorno, [[15, 46], [17, 46], [25, 46], [27, 46]])
+
+  // cabeça redonda, com as manchas do malhado em volta dos olhos
+  parte(elipse(21, 20, 16, 12.5), (x, y) => {
+    if (p.manchaEsquerda && (x - 10) ** 2 + (y - 15) ** 2 <= 38) return p.manchaEsquerda
+    if (p.manchaDireita && (x - 32) ** 2 + (y - 15) ** 2 <= 38) return p.manchaDireita
+    return p.pelo
+  })
+
+  // orelhas caídas, por cima da cabeça, dos dois lados
+  parte(elipse(6, 21, 3.8, 8.5), () => p.orelhaDeFora)
+  parte(elipse(36, 21, 3.8, 8.5), () => p.orelhaDeFora)
+
+  // o focinho clarinho (o nariz e a boca do rosto ficam por cima)
+  const focinho = elipse(21, 25, 7, 4.5)
+  for (let y = 0; y < ALTURA; y++) for (let x = 0; x < LARGURA; x++) if (focinho(x, y)) pinta(x, y, p.focinho)
 
   desenharRosto(expressao, p, pintaVarios, espelho)
   return g
