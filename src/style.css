@@ -105,6 +105,13 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* jogo em tela cheia no celular: a página por trás não rola nem "puxa pra atualizar" */
+html.jogo-em-tela-cheia,
+html.jogo-em-tela-cheia body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 body {
   margin: 0;
   padding: var(--space-8);

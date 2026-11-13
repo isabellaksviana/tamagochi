@@ -4,20 +4,22 @@ import { comecarMusica, pararMusica } from '../som'
 export type Etapa = 'inicio' | 'jogando' | 'fim'
 
 // O "esqueleto" dos jogos que rodam dentro do visor: o laço de quadros (umas 60 vezes por segundo),
-// a pausa (botão, tecla P/Esc e automática ao sair da aba), os controles (setas na tela,
-// teclado e toque nos lados da telinha) e o aviso pra tela de que a partida começou ou acabou.
+// a pausa (botão, tecla P/Esc e automática ao sair da aba), o "sair" com confirmação e os controles:
+// - no computador: o teclado (setas);
+// - no celular: o dedo (o bicho/nave vai atrás de onde o dedo está na telinha).
 // Cada jogo só escreve o seu "passo": o que acontece em um quadro.
 export function useJogoNoVisor(opcoes: {
   // um quadro do jogo; "segundos" é quanto tempo passou desde o anterior
   passo: (segundos: number) => void
-  // avisa a tela (o visor fica em pé e o bicho de sempre sai de cena)
+  // avisa a tela (o visor fica em pé, ou em tela cheia no celular)
   avisarJogando: (ligado: boolean) => void
 }) {
   const etapa = ref<Etapa>('inicio')
   const pausado = ref(false)
-  // pra onde o bicho está indo: -1 esquerda, 0 parado, 1 direita (não precisa ser reativo).
-  // direcaoY é pra quem anda pra cima e pra baixo também (a nave): -1 sobe, 1 desce
-  const controle = { direcao: 0, direcaoY: 0 }
+  // o aviso de pausa já abre na pergunta "Sair mesmo?" (quando tocou no X)
+  const confirmandoSaida = ref(false)
+  // pra onde ir: as setas do teclado (-1, 0, 1 em cada eixo) e o dedo (em pixels da telinha; null = sem dedo)
+  const controle = { direcao: 0, direcaoY: 0, dedo: null as { x: number; y: number } | null }
   let quadro = 0
   let ultimoQuadro = 0
 
@@ -29,25 +31,40 @@ export function useJogoNoVisor(opcoes: {
     if (etapa.value === 'jogando' && !pausado.value) quadro = requestAnimationFrame(laco)
   }
 
+  function soltarControles() {
+    controle.direcao = 0
+    controle.direcaoY = 0
+    controle.dedo = null
+  }
+
   function comecar() {
     etapa.value = 'jogando'
     pausado.value = false
-    controle.direcao = 0
-    controle.direcaoY = 0
+    confirmandoSaida.value = false
+    soltarControles()
     opcoes.avisarJogando(true)
     comecarMusica()
     ultimoQuadro = performance.now()
     quadro = requestAnimationFrame(laco)
-    // no celular, sobe a tela pra o visor em pé e os controles aparecerem inteiros
-    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   function terminar() {
     cancelAnimationFrame(quadro)
     pararMusica()
-    controle.direcao = 0
-    controle.direcaoY = 0
+    soltarControles()
+    pausado.value = false
     etapa.value = 'fim'
+    opcoes.avisarJogando(false)
+  }
+
+  // sair no meio (pela pausa, depois de confirmar): acaba sem prêmio e volta pro começo
+  function sair() {
+    cancelAnimationFrame(quadro)
+    pararMusica()
+    soltarControles()
+    pausado.value = false
+    confirmandoSaida.value = false
+    etapa.value = 'inicio'
     opcoes.avisarJogando(false)
   }
 
@@ -56,27 +73,16 @@ export function useJogoNoVisor(opcoes: {
     pausado.value = true
     cancelAnimationFrame(quadro)
     pararMusica()
-    controle.direcao = 0
-    controle.direcaoY = 0
+    soltarControles()
   }
 
   function continuar() {
     if (etapa.value !== 'jogando' || !pausado.value) return
     pausado.value = false
+    confirmandoSaida.value = false
     ultimoQuadro = performance.now()
     comecarMusica()
     quadro = requestAnimationFrame(laco)
-  }
-
-  // sair no meio (pela pausa): a partida acaba sem prêmio e o jogo volta pro começo
-  function sair() {
-    cancelAnimationFrame(quadro)
-    pararMusica()
-    controle.direcao = 0
-    controle.direcaoY = 0
-    pausado.value = false
-    etapa.value = 'inicio'
-    opcoes.avisarJogando(false)
   }
 
   function alternarPausa() {
@@ -84,44 +90,63 @@ export function useJogoNoVisor(opcoes: {
     else pausar()
   }
 
-  // ============ controles ============
-  function andar(direcao: number) {
-    if (pausado.value) return
-    controle.direcao = direcao
+  // o X: pausa e já pergunta se quer sair mesmo
+  function pedirSaida() {
+    pausar()
+    confirmandoSaida.value = true
   }
 
-  function andarVertical(direcao: number) {
-    if (pausado.value) return
-    controle.direcaoY = direcao
-  }
-
-  // tocar/clicar na metade esquerda ou direita da telinha
-  function tocarNaTela(evento: PointerEvent) {
-    if (pausado.value) return
+  // ============ o dedo (ou o mouse, segurando o botão) na telinha ============
+  function posicaoDoDedo(evento: PointerEvent) {
     const caixa = (evento.currentTarget as HTMLElement).getBoundingClientRect()
-    andar(evento.clientX < caixa.left + caixa.width / 2 ? -1 : 1)
+    return { x: evento.clientX - caixa.left, y: evento.clientY - caixa.top }
   }
 
+  function dedoDesceu(evento: PointerEvent) {
+    if (pausado.value) return
+    controle.dedo = posicaoDoDedo(evento)
+    // "captura" o dedo: ele continua sendo seguido mesmo se escorregar pra fora da telinha
+    try {
+      ;(evento.currentTarget as HTMLElement).setPointerCapture(evento.pointerId)
+    } catch {
+      // o toque já tinha acabado: sem problema, só não captura
+    }
+  }
+
+  function dedoMexeu(evento: PointerEvent) {
+    if (controle.dedo && !pausado.value) controle.dedo = posicaoDoDedo(evento)
+  }
+
+  function dedoSubiu() {
+    controle.dedo = null
+  }
+
+  // ============ o teclado ============
   function teclaApertada(evento: KeyboardEvent) {
     if (etapa.value !== 'jogando') return
     if (evento.key === 'p' || evento.key === 'P' || evento.key === 'Escape') {
       evento.preventDefault()
       return alternarPausa()
     }
-    if (evento.key === 'ArrowLeft') andar(-1)
-    if (evento.key === 'ArrowRight') andar(1)
-    // setas de cima e de baixo: só fazem efeito em quem anda na vertical; não rolam a página no jogo
-    if (evento.key === 'ArrowUp' || evento.key === 'ArrowDown') {
+    if (pausado.value) return
+    const setas: Record<string, () => void> = {
+      ArrowLeft: () => (controle.direcao = -1),
+      ArrowRight: () => (controle.direcao = 1),
+      ArrowUp: () => (controle.direcaoY = -1),
+      ArrowDown: () => (controle.direcaoY = 1),
+    }
+    if (setas[evento.key]) {
+      // no jogo, as setas não rolam a página
       evento.preventDefault()
-      andarVertical(evento.key === 'ArrowUp' ? -1 : 1)
+      setas[evento.key]!()
     }
   }
 
   function teclaSolta(evento: KeyboardEvent) {
-    if (evento.key === 'ArrowLeft' && controle.direcao === -1) andar(0)
-    if (evento.key === 'ArrowRight' && controle.direcao === 1) andar(0)
-    if (evento.key === 'ArrowUp' && controle.direcaoY === -1) andarVertical(0)
-    if (evento.key === 'ArrowDown' && controle.direcaoY === 1) andarVertical(0)
+    if (evento.key === 'ArrowLeft' && controle.direcao === -1) controle.direcao = 0
+    if (evento.key === 'ArrowRight' && controle.direcao === 1) controle.direcao = 0
+    if (evento.key === 'ArrowUp' && controle.direcaoY === -1) controle.direcaoY = 0
+    if (evento.key === 'ArrowDown' && controle.direcaoY === 1) controle.direcaoY = 0
   }
 
   function quandoSumir() {
@@ -142,5 +167,27 @@ export function useJogoNoVisor(opcoes: {
     document.removeEventListener('visibilitychange', quandoSumir)
   })
 
-  return { etapa, pausado, controle, comecar, terminar, sair, pausar, continuar, alternarPausa, andar, andarVertical, tocarNaTela }
+  return {
+    etapa,
+    pausado,
+    confirmandoSaida,
+    controle,
+    comecar,
+    terminar,
+    sair,
+    pausar,
+    continuar,
+    alternarPausa,
+    pedirSaida,
+    dedoDesceu,
+    dedoMexeu,
+    dedoSubiu,
+  }
+}
+
+// pra onde andar, de -1 a 1, até um alvo: perto do alvo vai devagarinho (e para), longe vai com tudo
+export function rumoAo(alvo: number, atual: number, folga = 30) {
+  const distancia = alvo - atual
+  if (Math.abs(distancia) < 3) return 0
+  return Math.sign(distancia) * Math.min(1, Math.abs(distancia) / folga)
 }

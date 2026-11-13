@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import DesenhoBicho from './DesenhoBicho.vue'
 import DesenhoOvo from './DesenhoOvo.vue'
 import IconePixel from './IconePixel.vue'
 import { CAIXINHA_SUJA, faseDo, HIGIENE } from '../regras'
+import { useTelaDeToque } from '../composables/useTelaDeToque'
 import type { Expressao } from './bicho/cores'
 import type { Bicho } from '../tipos'
 
@@ -27,6 +28,18 @@ const emit = defineEmits<{
 }>()
 
 const fase = computed(() => faseDo(props.bicho.chocou, props.bicho.idade))
+
+// ============ jogo no celular: tela cheia ============
+// no celular (toque), durante o jogo o visor ocupa a tela toda e a página para de rolar
+const toque = useTelaDeToque()
+watch(
+  () => props.jogando && toque.value,
+  (telaCheia) => {
+    document.documentElement.classList.toggle('jogo-em-tela-cheia', telaCheia)
+  },
+  { immediate: true },
+)
+onUnmounted(() => document.documentElement.classList.remove('jogo-em-tela-cheia'))
 const caixinhaSuja = computed(() => props.bicho.status.higiene < CAIXINHA_SUJA)
 const risquinhosDaBateria = computed(() => Math.ceil(props.bicho.status.energia / 34))
 const dormindo = computed(() => props.bicho.luzApagada)
@@ -117,14 +130,17 @@ const passeando = computed(() => fase.value !== 'ovo' && !dormindo.value && !pro
 </script>
 
 <template>
-  <div class="visor" :class="[`fase-${fase}`, { noite, apagado: dormindo, 'em-pe': jogando }]">
+  <div class="visor" :class="[`fase-${fase}`, { noite, apagado: dormindo, 'em-pe': jogando, 'tela-cheia': jogando && toque }]">
     <!-- de noite aparecem as estrelinhas -->
     <span v-if="noite" class="estrelas" aria-hidden="true" />
 
-    <span class="bateria" :aria-label="`Energia: ${risquinhosDaBateria} de 3`">
-      <i v-for="n in 3" :key="n" :class="{ acesa: n <= risquinhosDaBateria }" />
-    </span>
-    <span class="hora numero">{{ hora }}</span>
+    <!-- no jogo, o topo é do placar (bateria e hora saem de cena) -->
+    <template v-if="!jogando">
+      <span class="bateria" :aria-label="`Energia: ${risquinhosDaBateria} de 3`">
+        <i v-for="n in 3" :key="n" :class="{ acesa: n <= risquinhosDaBateria }" />
+      </span>
+      <span class="hora numero">{{ hora }}</span>
+    </template>
 
     <!-- o palco dos jogos: a Chuva de petiscos "teleporta" o jogo pra cá -->
     <div id="palco-do-jogo" class="palco-do-jogo" :class="{ ativo: jogando }" />
@@ -218,9 +234,28 @@ const passeando = computed(() => fase.value !== 'ovo' && !dormindo.value && !pro
 
 /* durante os jogos, o visor fica EM PÉ (como a tela de um portátil): estica pra cima,
    do tanto que couber na tela sem esconder os controles embaixo */
+/* sem animação de altura: o jogo mede a telinha logo no primeiro quadro (crescendo aos poucos,
+   a nave nascia no lugar errado) */
 .visor.em-pe {
-  height: max(20rem, min(32rem, 100dvh - 27rem));
-  transition: height 0.3s;
+  height: max(24rem, min(36rem, 100dvh - 20rem));
+  transition: none;
+}
+
+/* no celular, durante o jogo: a telinha ocupa a tela inteira (por cima de tudo, inclusive da navegação) */
+.visor.tela-cheia {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  height: 100dvh;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  transition: none;
+}
+
+.visor.tela-cheia .chao {
+  bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
 }
 
 /* o palco do jogo cobre a telinha só durante a partida (fora dela, não atrapalha os cliques) */

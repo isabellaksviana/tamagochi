@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import IconePixel from './IconePixel.vue'
 import { comecarMusica, pararMusica, tocar } from '../som'
 import type { Expressao } from './bicho/cores'
@@ -59,11 +59,20 @@ function chutar(lado: 'esquerda' | 'direita') {
   }, 1300)
 }
 
+// no computador: as setas ← → chutam o lado (no celular, os botões grandes)
+function teclaApertada(evento: KeyboardEvent) {
+  if (etapa.value !== 'escolher') return
+  if (evento.key === 'ArrowLeft') chutar('esquerda')
+  if (evento.key === 'ArrowRight') chutar('direita')
+}
+onMounted(() => window.addEventListener('keydown', teclaApertada))
+
 // saiu da aba no meio do jogo: o visor volta ao normal
 onUnmounted(() => {
   clearTimeout(relogio)
   pararMusica()
   emit('olhou', null)
+  window.removeEventListener('keydown', teclaApertada)
 })
 </script>
 

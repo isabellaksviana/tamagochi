@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-
 // o aviso de pausa no meio do visor, igual em todos os jogos: continuar ou sair do jogo.
-// Sair pede confirmação (um toque sem querer, com o celular largado na mesa, não perde a partida)
+// Sair pede confirmação (um toque sem querer, com o celular largado na mesa, não perde a partida).
+// "confirmando" vem de fora: o X do HUD já abre direto na pergunta.
+const confirmando = defineModel<boolean>('confirmando', { default: false })
+
 const emit = defineEmits<{
   continuar: []
   sair: []
 }>()
-
-const confirmando = ref(false)
 </script>
 
 <template>
@@ -23,7 +22,7 @@ const confirmando = ref(false)
     <template v-else>
       <strong>Sair mesmo?</strong>
       <p>Você perde esta partida.</p>
-      <button class="button button-primary" type="button" @click="confirmando = false">Não, continuar jogando</button>
+      <button class="button button-primary" type="button" @click="emit('continuar')">Não, continuar jogando</button>
       <button class="button button-danger" type="button" @click="emit('sair')">Sim, sair</button>
     </template>
   </div>
@@ -39,7 +38,7 @@ const confirmando = ref(false)
   gap: var(--space-3);
   padding: var(--space-4);
   text-align: center;
-  background: color-mix(in srgb, var(--lcd) 85%, transparent);
+  background: color-mix(in srgb, var(--lcd) 88%, transparent);
 }
 
 strong {
@@ -57,5 +56,6 @@ p {
 
 .button {
   min-width: 12rem;
+  min-height: 3rem;
 }
 </style>

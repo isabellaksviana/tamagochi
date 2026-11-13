@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import IconePixel from './IconePixel.vue'
-import ControlesDoJogo from './ControlesDoJogo.vue'
+import HudDoJogo from './HudDoJogo.vue'
+import DicaDoTeclado from './DicaDoTeclado.vue'
 import AvisoPausa from './AvisoPausa.vue'
-import { useJogoNoVisor } from '../composables/useJogoNoVisor'
+import { rumoAo, useJogoNoVisor } from '../composables/useJogoNoVisor'
+import { useTelaDeToque } from '../composables/useTelaDeToque'
 import { tocar } from '../som'
 import type { NomeIcone } from '../icones'
 import type { Bicho } from '../tipos'
@@ -12,7 +14,8 @@ import type { Bicho } from '../tipos'
 // reto pra cima. Asteroides descem: o tiro destrói, encostar tira uma vida. Caem moedas e POWER-UPS
 // (tiro triplo, tiro rápido, escudo e vida extra). Com pontos suficientes chega o CHEFÃO: bem difícil,
 // com leque de tiros e tiros mirados na nave. Os power-ups são o jeito de vencer ele.
-// No celular, a nave também segue o dedo (é só arrastar na telinha).
+// Controles: no celular, a nave vai atrás do dedo (um pouco acima dele, pra o dedo não tampar a nave);
+// no computador, as setas.
 defineProps<{
   bicho: Bicho
 }>()
@@ -26,7 +29,10 @@ const emit = defineEmits<{
 
 const VIDAS = 5
 const MAXIMO_DE_MOEDAS = 5
-const VELOCIDADE_DA_NAVE = 250 // px/s
+const VELOCIDADE_NO_TECLADO = 250 // px/s
+const VELOCIDADE_NO_DEDO = 460 // px/s
+// a nave fica esta distância acima do dedo
+const ACIMA_DO_DEDO = 70
 const VELOCIDADE_DO_TIRO = 540 // px/s
 const PONTOS_PRO_PRIMEIRO_CHEFAO = 200
 const PONTOS_ENTRE_CHEFOES = 350
@@ -61,6 +67,7 @@ const NOME_DO_PODER: Record<TipoDePoder, string> = {
   vida: 'Vida extra',
 }
 
+const toque = useTelaDeToque()
 const ceu = ref<HTMLElement | null>(null)
 const naveX = ref(0)
 const naveY = ref(0)
@@ -96,8 +103,6 @@ let poderAntesDoChefao = false
 let invencivel = 0
 let montado = false
 let relogioDoAviso = 0
-// pra onde o dedo está apontando (a nave vai atrás); null = sem dedo na tela
-let alvoDoDedo: { x: number; y: number } | null = null
 
 function tamanho() {
   return { largura: ceu.value?.clientWidth ?? 320, altura: ceu.value?.clientHeight ?? 400 }
@@ -148,22 +153,18 @@ const jogo = useJogoNoVisor({
     const { largura, altura } = tamanho()
     if (!montado) {
       naveX.value = largura / 2
-      naveY.value = altura - 50
+      naveY.value = altura - 80
       montado = true
     }
 
-    // ============ a nave: setas/teclado ou seguindo o dedo ============
-    let dx = jogo.controle.direcao
-    let dy = jogo.controle.direcaoY
-    if (alvoDoDedo) {
-      const distanciaX = alvoDoDedo.x - naveX.value
-      const distanciaY = alvoDoDedo.y - naveY.value
-      dx = Math.abs(distanciaX) > 4 ? Math.sign(distanciaX) * Math.min(1, Math.abs(distanciaX) / 40) : 0
-      dy = Math.abs(distanciaY) > 4 ? Math.sign(distanciaY) * Math.min(1, Math.abs(distanciaY) / 40) : 0
-    }
-    naveX.value = Math.min(largura - 26, Math.max(26, naveX.value + dx * VELOCIDADE_DA_NAVE * segundos))
+    // ============ a nave: atrás do dedo (celular/mouse) ou pelas setas (teclado) ============
+    const dedo = jogo.controle.dedo
+    const dx = dedo ? rumoAo(dedo.x, naveX.value) : jogo.controle.direcao
+    const dy = dedo ? rumoAo(dedo.y - ACIMA_DO_DEDO, naveY.value) : jogo.controle.direcaoY
+    const velocidade = dedo ? VELOCIDADE_NO_DEDO : VELOCIDADE_NO_TECLADO
+    naveX.value = Math.min(largura - 26, Math.max(26, naveX.value + dx * velocidade * segundos))
     // pra cima, só até a metade da telinha (lá em cima é do chefão)
-    naveY.value = Math.min(altura - 30, Math.max(altura * 0.45, naveY.value + dy * VELOCIDADE_DA_NAVE * segundos))
+    naveY.value = Math.min(altura - 50, Math.max(altura * 0.45, naveY.value + dy * velocidade * segundos))
     const centroDaNave = { x: naveX.value, y: naveY.value }
 
     invencivel = Math.max(0, invencivel - segundos)
@@ -350,22 +351,6 @@ const jogo = useJogoNoVisor({
   },
 })
 
-// ============ o dedo na telinha: a nave vai atrás ============
-function dedoNaTela(evento: PointerEvent) {
-  if (jogo.pausado.value) return
-  const caixa = (evento.currentTarget as HTMLElement).getBoundingClientRect()
-  // um pouquinho acima do dedo, pra o dedo não cobrir a nave
-  alvoDoDedo = { x: evento.clientX - caixa.left, y: evento.clientY - caixa.top - 40 }
-}
-
-function dedoMexeu(evento: PointerEvent) {
-  if (alvoDoDedo) dedoNaTela(evento)
-}
-
-function dedoSaiu() {
-  alvoDoDedo = null
-}
-
 function comecar() {
   tiros.value = []
   asteroides.value = []
@@ -390,7 +375,6 @@ function comecar() {
   recargaDoTiro = 0
   invencivel = 0
   montado = false
-  alvoDoDedo = null
   jogo.comecar()
 }
 
@@ -419,9 +403,10 @@ function terminar() {
     <template v-if="jogo.etapa.value === 'inicio'">
       <h2>Gochi Espacial</h2>
       <p>
-        Pilote a nave pra todos os lados (ou arraste o dedo na telinha): o tiro sai sozinho. Destrua os asteroides,
+        Pilote a nave pra todos os lados: o tiro sai sozinho. Destrua os asteroides,
         pegue moedas e power-ups e enfrente o chefão. São {{ VIDAS }} vidas.
       </p>
+      <p class="como">{{ toque ? 'Arraste o dedo na tela: a nave vai atrás.' : 'Use as setas ← → ↑ ↓ do teclado pra pilotar.' }}</p>
       <p v-if="recorde > 0" class="recorde">Recorde: <span class="numero">{{ recorde }}</span> pontos</p>
       <p v-if="bicho.status.energia < 20" class="aviso">Cansado demais pra brincar. Apague a luz um pouquinho.</p>
       <button class="button button-primary grande" type="button" :disabled="bicho.status.energia < 20" @click="comecar">
@@ -431,29 +416,19 @@ function terminar() {
     </template>
 
     <template v-else-if="jogo.etapa.value === 'jogando'">
-      <ControlesDoJogo
-        :pausado="jogo.pausado.value"
-        vertical
-        @andar="jogo.andar"
-        @andar-vertical="jogo.andarVertical"
-        @alternar-pausa="jogo.alternarPausa"
-      >
-        <span>Pontos <span class="numero">{{ pontos }}</span></span>
-        <span class="vidas" :aria-label="`${vidas} de ${VIDAS} vidas`">
-          <IconePixel v-for="n in VIDAS" :key="n" nome="coracao" :class="{ perdida: n > vidas }" />
-        </span>
-      </ControlesDoJogo>
+      <!-- no computador, a dica das teclas embaixo do visor (no celular o jogo está em tela cheia) -->
+      <DicaDoTeclado v-if="!toque" vertical />
 
       <Teleport to="#palco-do-jogo">
         <div
           ref="ceu"
           class="ceu"
-          @pointerdown="dedoNaTela"
-          @pointermove="dedoMexeu"
-          @pointerup="dedoSaiu"
-          @pointerleave="dedoSaiu"
-          @pointercancel="dedoSaiu"
+          @pointerdown="jogo.dedoDesceu"
+          @pointermove="jogo.dedoMexeu"
+          @pointerup="jogo.dedoSubiu"
+          @pointercancel="jogo.dedoSubiu"
         >
+          <HudDoJogo :pontos="pontos" :vidas="vidas" :vidas-maximas="VIDAS" @pausar="jogo.pausar" @sair="jogo.pedirSaida" />
           <span class="fase numero">Fase {{ fase }}</span>
 
           <!-- os poderes ligados, no canto de baixo -->
@@ -489,7 +464,7 @@ function terminar() {
 
           <span v-if="aviso" class="aviso-no-meio">{{ aviso }}</span>
 
-          <AvisoPausa v-if="jogo.pausado.value" @continuar="jogo.continuar" @sair="sair" />
+          <AvisoPausa v-if="jogo.pausado.value" v-model:confirmando="jogo.confirmandoSaida.value" @continuar="jogo.continuar" @sair="sair" />
         </div>
       </Teleport>
     </template>
@@ -559,9 +534,15 @@ p {
   cursor: pointer;
 }
 
+.como {
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* logo abaixo do placar do topo */
 .fase {
   position: absolute;
-  top: 0.9rem;
+  top: calc(3.6rem + env(safe-area-inset-top, 0px));
   left: 50%;
   transform: translateX(-50%);
   font-size: var(--font-size-sm);
@@ -571,7 +552,7 @@ p {
 .poderes-ligados {
   position: absolute;
   left: 0.75rem;
-  bottom: 0.75rem;
+  bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
   display: flex;
   gap: var(--space-2);
 }

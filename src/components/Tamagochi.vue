@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import BotaoTema from './BotaoTema.vue'
 import BotaoSom from './BotaoSom.vue'
 import { tocar } from '../som'
@@ -79,8 +79,16 @@ const NAVEGACAO: { id: Aba | 'loja' | 'mochila'; rotulo: string; icone: NomeIcon
 // na aba Jogar: qual jogo está aberto (null = a escolha)
 type Jogo = 'lado' | 'chuva' | 'happy' | 'espacial'
 const jogo = ref<Jogo | null>(null)
-// a Chuva de petiscos acontece dentro do visor: enquanto ela roda, o gato de sempre sai de cena
+// os jogos acontecem dentro do visor: enquanto rodam, o bicho de sempre sai de cena
 const jogandoNoVisor = ref(false)
+
+// começou: sobe a tela pro visor ficar inteiro à vista. Acabou: desce até o resultado
+watch(jogandoNoVisor, (jogando) => {
+  nextTick(() => {
+    if (jogando) window.scrollTo({ top: 0 })
+    else document.querySelector('.jogo')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  })
+})
 
 function escolherJogo(qual: Jogo | null) {
   tocar('clique')
@@ -343,7 +351,8 @@ onUnmounted(() => {
     />
 
     <!-- ============ a navegação de baixo ============ -->
-    <nav class="navegacao" aria-label="Seções do bichinho">
+    <!-- durante a partida a navegação sai (no computador ela tampava a dica das teclas) -->
+    <nav v-if="!jogandoNoVisor" class="navegacao" aria-label="Seções do bichinho">
       <button
         v-for="item in NAVEGACAO"
         :key="item.id"

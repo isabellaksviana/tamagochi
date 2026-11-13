@@ -2,16 +2,19 @@
 import { computed, ref } from 'vue'
 import DesenhoBicho from './DesenhoBicho.vue'
 import IconePixel from './IconePixel.vue'
-import ControlesDoJogo from './ControlesDoJogo.vue'
+import HudDoJogo from './HudDoJogo.vue'
+import DicaDoTeclado from './DicaDoTeclado.vue'
 import AvisoPausa from './AvisoPausa.vue'
-import { useJogoNoVisor } from '../composables/useJogoNoVisor'
+import { rumoAo, useJogoNoVisor } from '../composables/useJogoNoVisor'
+import { useTelaDeToque } from '../composables/useTelaDeToque'
 import { tocar } from '../som'
 import type { Bicho } from '../tipos'
 
 // "Happy Gochi": o bicho pula sozinho de plataforma em plataforma e você só move pros lados.
 // O cenário desce conforme ele sobe; quanto mais alto, mais pontos. Algumas plataformas têm moeda.
-// Caiu pra fora da tela, acabou. Tudo em pixels da telinha (o visor fica em pé durante a partida).
-const props = defineProps<{
+// Caiu pra fora da tela, acabou. Tudo em pixels da telinha (em pé no computador, tela cheia no celular).
+// Controles: no celular, o bicho vai atrás do dedo; no computador, as setas.
+defineProps<{
   bicho: Bicho
 }>()
 
@@ -24,7 +27,8 @@ const emit = defineEmits<{
 
 const GRAVIDADE = 1400 // px/s²
 const PULO = -640 // px/s (pra cima é negativo, como na tela)
-const VELOCIDADE_DE_LADO = 260 // px/s
+const VELOCIDADE_NO_TECLADO = 260 // px/s
+const VELOCIDADE_NO_DEDO = 420 // px/s (o dedo é preciso: o bicho corre pra lá)
 const LARGURA_DO_BICHO = 60
 const ALTURA_DO_BICHO = 65
 const LARGURA_DA_PLATAFORMA = 64
@@ -32,6 +36,7 @@ const MAXIMO_DE_MOEDAS = 5
 
 type Plataforma = { id: number; x: number; y: number; moeda: boolean; vx: number }
 
+const toque = useTelaDeToque()
 const ceu = ref<HTMLElement | null>(null)
 const bichoX = ref(0) // o meio do bicho
 const bichoY = ref(0) // a altura dos pés
@@ -72,10 +77,17 @@ const jogo = useJogoNoVisor({
     // primeiro quadro: monta a fase já com o tamanho de verdade da telinha
     if (plataformas.value.length === 0) return montarFase(largura, altura)
 
-    // de lado: as setas; quem sai por um lado aparece do outro
-    bichoX.value += jogo.controle.direcao * VELOCIDADE_DE_LADO * segundos
-    if (bichoX.value < -LARGURA_DO_BICHO / 2) bichoX.value = largura + LARGURA_DO_BICHO / 2
-    if (bichoX.value > largura + LARGURA_DO_BICHO / 2) bichoX.value = -LARGURA_DO_BICHO / 2
+    // de lado: atrás do dedo (celular/mouse) ou pelas setas (teclado)
+    const dedo = jogo.controle.dedo
+    if (dedo) {
+      bichoX.value += rumoAo(dedo.x, bichoX.value) * VELOCIDADE_NO_DEDO * segundos
+      bichoX.value = Math.min(largura - LARGURA_DO_BICHO / 2, Math.max(LARGURA_DO_BICHO / 2, bichoX.value))
+    } else {
+      // no teclado, quem sai por um lado aparece do outro
+      bichoX.value += jogo.controle.direcao * VELOCIDADE_NO_TECLADO * segundos
+      if (bichoX.value < -LARGURA_DO_BICHO / 2) bichoX.value = largura + LARGURA_DO_BICHO / 2
+      if (bichoX.value > largura + LARGURA_DO_BICHO / 2) bichoX.value = -LARGURA_DO_BICHO / 2
+    }
 
     // a gravidade puxa pra baixo
     const pesAntes = bichoY.value
@@ -141,7 +153,7 @@ const jogo = useJogoNoVisor({
 
 // começa em cima de uma plataforma bem no meio, embaixo, já pulando
 function montarFase(largura: number, altura: number) {
-  const chao: Plataforma = { id: proximoId++, x: largura / 2 - LARGURA_DA_PLATAFORMA / 2, y: altura - 30, moeda: false, vx: 0 }
+  const chao: Plataforma = { id: proximoId++, x: largura / 2 - LARGURA_DA_PLATAFORMA / 2, y: altura - 60, moeda: false, vx: 0 }
   plataformas.value = [chao]
   bichoX.value = largura / 2
   bichoY.value = chao.y
@@ -183,6 +195,7 @@ function terminar() {
         {{ bicho.nome }} pula sozinho: mexa pros lados pra cair nas plataformas. Quanto mais alto, mais pontos.
         Pegue as moedas no caminho (até {{ MAXIMO_DE_MOEDAS }} por partida).
       </p>
+      <p class="como">{{ toque ? 'Arraste o dedo na tela pra mover.' : 'Use as setas ← → do teclado pra mover.' }}</p>
       <p v-if="recorde > 0" class="recorde">Recorde: <span class="numero">{{ recorde }}</span> pontos</p>
       <p v-if="bicho.status.energia < 20" class="aviso">Cansado demais pra brincar. Apague a luz um pouquinho.</p>
       <button class="button button-primary grande" type="button" :disabled="bicho.status.energia < 20" @click="comecar">
@@ -192,21 +205,20 @@ function terminar() {
     </template>
 
     <template v-else-if="jogo.etapa.value === 'jogando'">
-      <ControlesDoJogo :pausado="jogo.pausado.value" @andar="jogo.andar" @alternar-pausa="jogo.alternarPausa">
-        <span>Pontos <span class="numero">{{ pontos }}</span></span>
-        <span class="moedas"><IconePixel nome="moeda" /> <span class="numero">{{ moedasPegas }}</span></span>
-      </ControlesDoJogo>
+      <!-- no computador, a dica das teclas embaixo do visor (no celular o jogo está em tela cheia) -->
+      <DicaDoTeclado v-if="!toque" />
 
       <!-- o jogo acontece DENTRO do visor (o Teleport leva este pedaço pra lá) -->
       <Teleport to="#palco-do-jogo">
         <div
           ref="ceu"
           class="ceu"
-          @pointerdown="jogo.tocarNaTela"
-          @pointerup="jogo.andar(0)"
-          @pointerleave="jogo.andar(0)"
-          @pointercancel="jogo.andar(0)"
+          @pointerdown="jogo.dedoDesceu"
+          @pointermove="jogo.dedoMexeu"
+          @pointerup="jogo.dedoSubiu"
+          @pointercancel="jogo.dedoSubiu"
         >
+          <HudDoJogo :pontos="pontos" :moedas="moedasPegas" @pausar="jogo.pausar" @sair="jogo.pedirSaida" />
           <template v-for="plataforma in plataformas" :key="plataforma.id">
             <span class="plataforma" :class="{ anda: plataforma.vx !== 0 }" :style="{ left: `${plataforma.x}px`, top: `${plataforma.y}px` }" />
             <span v-if="plataforma.moeda" class="moeda" :style="{ left: `${plataforma.x + 32}px`, top: `${plataforma.y - 26}px` }">
@@ -216,7 +228,7 @@ function terminar() {
           <span class="bicho" :style="{ left: `${bichoX - 30}px`, top: `${bichoY - 65}px` }">
             <DesenhoBicho :especie="bicho.especie" :cor="bicho.cor" :expressao="subindo ? 'feliz' : 'surpreso'" />
           </span>
-          <AvisoPausa v-if="jogo.pausado.value" @continuar="jogo.continuar" @sair="sair" />
+          <AvisoPausa v-if="jogo.pausado.value" v-model:confirmando="jogo.confirmandoSaida.value" @continuar="jogo.continuar" @sair="sair" />
         </div>
       </Teleport>
     </template>
@@ -261,6 +273,11 @@ p {
 .aviso {
   color: var(--danger-text);
   font-weight: 600;
+}
+
+.como {
+  font-weight: 600;
+  color: var(--text);
 }
 
 .moedas {
