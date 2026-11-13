@@ -24,11 +24,13 @@ const PONTOS_POR_MOEDA = 10
 const MAXIMO_DE_MOEDAS = 5
 // posições em % da largura/altura da telinha
 const VELOCIDADE_DO_GATO = 70 // % por segundo
-// onde o petisco encontra a cabeça do bicho (o topo do petisco, em % da altura da telinha)
-const ALTURA_DA_BOCA = 47
-const ALCANCE = 11 // quão longe do meio do bicho ainda conta como pego
-// passou daqui sem ser pego: caiu no chão
-const CHAO = 86
+const ALCANCE = 11 // quão longe do meio do bicho ainda conta como pego (em %)
+// a cabeça do bicho, em pixels contados de baixo da telinha (ele tem 90px de largura e fica 20px acima do fundo):
+// o topo da cabeça fica a ~102px do fundo. Em pixels, porque o visor muda de altura (fica em pé no jogo)
+const TOPO_DA_CABECA = 102
+const ALTURA_DO_PETISCO = 24
+// a telinha, pra saber a altura de verdade
+const ceu = ref<HTMLElement | null>(null)
 
 type Petisco = { id: number; x: number; y: number; icone: NomeIcone }
 const ICONES_DE_PETISCO: NomeIcone[] = ['peixe', 'biscoito', 'sache']
@@ -57,6 +59,8 @@ let relogioDoPegou = 0
 
 function comecar() {
   emit('jogando', true)
+  // no celular, sobe a tela pra o visor em pé e os controles aparecerem inteiros
+  window.scrollTo({ top: 0, behavior: 'smooth' })
   etapa.value = 'jogando'
   gatoX.value = 50
   petiscos.value = []
@@ -123,13 +127,18 @@ function passo(agora: number) {
   // pegou: chegou na altura da boca e está perto do bicho. Caiu no chão: perde uma vida
   const restantes: Petisco[] = []
   for (const petisco of petiscos.value) {
-    if (petisco.y >= ALTURA_DA_BOCA && petisco.y < ALTURA_DA_BOCA + 16 && Math.abs(petisco.x - gatoX.value) < ALCANCE) {
+    // em pixels: onde está o topo do petisco e onde está a cabeça do bicho
+    const altura = ceu.value?.clientHeight ?? 240
+    const topoDoPetisco = (petisco.y / 100) * altura
+    const cabeca = altura - TOPO_DA_CABECA
+    const naCabeca = topoDoPetisco + ALTURA_DO_PETISCO >= cabeca && topoDoPetisco <= cabeca + 40
+    if (naCabeca && Math.abs(petisco.x - gatoX.value) < ALCANCE) {
       pontos.value++
       tocar('pegou')
       pegouAgora.value = true
       clearTimeout(relogioDoPegou)
       relogioDoPegou = setTimeout(() => (pegouAgora.value = false), 300)
-    } else if (petisco.y >= CHAO) {
+    } else if (topoDoPetisco >= altura - 40) {
       vidas.value--
       tocar('errou')
     } else {
@@ -205,7 +214,8 @@ onUnmounted(() => {
 
 <template>
   <section class="jogo">
-    <h2>Chuva de petiscos</h2>
+    <!-- durante a partida, o título some pra caber o visor em pé e os controles -->
+    <h2 v-if="etapa !== 'jogando'">Chuva de petiscos</h2>
 
     <template v-if="etapa === 'inicio'">
       <p>
@@ -242,6 +252,7 @@ onUnmounted(() => {
            Tocar num lado da telinha anda pra aquele lado. -->
       <Teleport to="#palco-do-jogo">
         <div
+          ref="ceu"
           class="ceu"
           @pointerdown="tocarNaTela"
           @pointerup="andar(0)"

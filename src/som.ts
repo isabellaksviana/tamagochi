@@ -17,6 +17,9 @@ export type Som =
   | 'clique'
   | 'rodada'
   | 'pegou'
+  | 'pulo'
+  | 'explosao'
+  | 'alerta'
 
 // cada som é uma sequência de notas: [frequência em Hz, duração em segundos]
 const MUSICAS: Record<Som, [number, number][]> = {
@@ -35,6 +38,10 @@ const MUSICAS: Record<Som, [number, number][]> = {
   fimDoJogo: [[523, 0.1], [659, 0.1], [784, 0.1], [659, 0.1], [1047, 0.25]],
   rodada: [[659, 0.05], [659, 0.05]],
   pegou: [[1319, 0.04], [1568, 0.06]],
+  pulo: [[523, 0.03], [784, 0.04]],
+  explosao: [[196, 0.04], [147, 0.07]],
+  // o chefão chegou!
+  alerta: [[440, 0.1], [330, 0.1], [440, 0.1], [330, 0.15]],
 }
 
 // a musiquinha de fundo do minijogo (em loop); 0 = pausa

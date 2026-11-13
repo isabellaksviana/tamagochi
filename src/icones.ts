@@ -74,6 +74,34 @@ export const ICONES = {
   pausa: ['TT.TT', 'TT.TT', 'TT.TT', 'TT.TT', 'TT.TT', 'TT.TT', 'TT.TT'],
   play: ['T....', 'TT...', 'TTT..', 'TTTT.', 'TTT..', 'TT...', 'T....'],
 
+  // ---------- Gochi Espacial ----------
+  nave: [
+    '......K......',
+    '.....KWK.....',
+    '....KWWWK....',
+    '...KLLLLLK...',
+    '..KLLLLLLLK..',
+    '.KLLLPLPLLLK.',
+    'KLLLLLLLLLLLK',
+    'KLKKKKKKKKKLK',
+    'KK..YAYAY..KK',
+    '.....Y.Y.....',
+  ],
+  asteroide: ['..KKKK...', '.KggggKK.', 'KgKgggggK', 'KgggggKgK', 'KggKggggK', 'KgggggggK', '.KggKgggK', '..KggggK.', '...KKKK..'],
+  chefao: [
+    '........KKKKKKK........',
+    '......KKlllllllKK......',
+    '....KKlllWWWWWlllKK....',
+    '..KKlllllWhWWWlllllKK..',
+    'KKlllllllllllllllllllKK',
+    'KllYllYllYllYllYllYlllK',
+    'KlllllllllllllllllllllK',
+    '.KKlllllllllllllllllKK.',
+    '...KKKlllllllllllKKK...',
+    '......KKKlllllKKK......',
+    '.........KKKKK.........',
+  ],
+
   // ---------- itens da loja ----------
   sache: ['.K.K.K.K.', 'KAAAAAAAK', 'KAhAAAAAK', 'KAAAAAAAK', 'KAWWWWWAK', 'KAWBBBWAK', 'KAWWWWWAK', 'KAAAAAAAK', 'KAAAAAAAK', '.KKKKKKK.'],
   peixe: ['...KKKK....', '.KKBBBBK.KK', 'KBhBBBBBKBK', 'KBKBBBBBBBK', 'KBBBBBBBKBK', '.KKBBBBK.KK', '...KKKK....'],

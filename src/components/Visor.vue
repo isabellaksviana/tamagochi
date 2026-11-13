@@ -117,7 +117,7 @@ const passeando = computed(() => fase.value !== 'ovo' && !dormindo.value && !pro
 </script>
 
 <template>
-  <div class="visor" :class="[`fase-${fase}`, { noite, apagado: dormindo }]">
+  <div class="visor" :class="[`fase-${fase}`, { noite, apagado: dormindo, 'em-pe': jogando }]">
     <!-- de noite aparecem as estrelinhas -->
     <span v-if="noite" class="estrelas" aria-hidden="true" />
 
@@ -214,6 +214,13 @@ const passeando = computed(() => fase.value !== 'ovo' && !dormindo.value && !pro
 .visor.apagado .hora,
 .visor.apagado .bateria {
   color: #8f89a8;
+}
+
+/* durante os jogos, o visor fica EM PÉ (como a tela de um portátil): estica pra cima,
+   do tanto que couber na tela sem esconder os controles embaixo */
+.visor.em-pe {
+  height: max(20rem, min(32rem, 100dvh - 27rem));
+  transition: height 0.3s;
 }
 
 /* o palco do jogo cobre a telinha só durante a partida (fora dela, não atrapalha os cliques) */

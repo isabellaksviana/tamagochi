@@ -7,6 +7,8 @@ import IconePixel from './IconePixel.vue'
 import Visor from './Visor.vue'
 import Minijogo from './Minijogo.vue'
 import ChuvaDePetiscos from './ChuvaDePetiscos.vue'
+import HappyGochi from './HappyGochi.vue'
+import GochiEspacial from './GochiEspacial.vue'
 import Diario from './Diario.vue'
 import { BARRAS } from '../barras'
 import { diasDe, expressaoDo, faseDo, HIGIENE, LIMITE_BAIXO, MINIMO, NOME_DA_FASE, type Periodo } from '../regras'
@@ -75,7 +77,7 @@ const NAVEGACAO: { id: Aba | 'loja' | 'mochila'; rotulo: string; icone: NomeIcon
 ]
 
 // na aba Jogar: qual jogo está aberto (null = a escolha)
-type Jogo = 'lado' | 'chuva'
+type Jogo = 'lado' | 'chuva' | 'happy' | 'espacial'
 const jogo = ref<Jogo | null>(null)
 // a Chuva de petiscos acontece dentro do visor: enquanto ela roda, o gato de sempre sai de cena
 const jogandoNoVisor = ref(false)
@@ -279,10 +281,21 @@ onUnmounted(() => {
           <strong>Chuva de petiscos</strong>
           <span>Mexa {{ bicho.nome }} pra pegar o que cai do céu.</span>
         </button>
+        <button class="cartao-jogo" type="button" @click="escolherJogo('happy')">
+          <IconePixel nome="moeda" :escala="4" />
+          <strong>Happy Gochi</strong>
+          <span>Pule de plataforma em plataforma até lá no alto.</span>
+        </button>
+        <button class="cartao-jogo" type="button" @click="escolherJogo('espacial')">
+          <IconePixel nome="nave" :escala="3" />
+          <strong>Gochi Espacial</strong>
+          <span>Pilote a nave, destrua asteroides e vença o chefão.</span>
+        </button>
       </div>
 
       <template v-else>
-        <button class="button trocar-jogo" type="button" @click="escolherJogo(null)">
+        <!-- durante a partida o botão some (o espaço é do visor em pé e dos controles) -->
+        <button v-if="!jogandoNoVisor" class="button trocar-jogo" type="button" @click="escolherJogo(null)">
           <IconePixel nome="seta" />
           Trocar de jogo
         </button>
@@ -293,7 +306,9 @@ onUnmounted(() => {
           @olhou="olharDoJogo = $event"
           @terminou="emit('jogou', $event)"
         />
-        <ChuvaDePetiscos v-else :bicho="bicho" @jogando="jogandoNoVisor = $event" @terminou="emit('jogou', $event)" />
+        <ChuvaDePetiscos v-else-if="jogo === 'chuva'" :bicho="bicho" @jogando="jogandoNoVisor = $event" @terminou="emit('jogou', $event)" />
+        <HappyGochi v-else-if="jogo === 'happy'" :bicho="bicho" @jogando="jogandoNoVisor = $event" @terminou="emit('jogou', $event)" />
+        <GochiEspacial v-else :bicho="bicho" @jogando="jogandoNoVisor = $event" @terminou="emit('jogou', $event)" />
       </template>
     </template>
 
