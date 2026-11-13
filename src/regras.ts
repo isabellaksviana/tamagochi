@@ -1,4 +1,5 @@
-import type { Expressao } from './components/bicho/cores'
+import type { Especie, Expressao } from './components/bicho/cores'
+import type { NomeIcone } from './icones'
 import type { Bicho, Status } from './tipos'
 
 // abaixo disso, a barra fica vermelha e a cara do bicho muda
@@ -6,6 +7,23 @@ export const LIMITE_BAIXO = 30
 
 // abaixo disso, a caixinha de areia aparece suja no visor
 export const CAIXINHA_SUJA = 50
+
+// ============ higiene de cada bicho ============
+// a barra é a mesma (Higiene), mas o cuidado faz sentido pra cada um:
+// gato e coelho usam caixinha; a capivara ama água (piscininha); a tartaruga precisa de água limpa
+export type Higiene = {
+  acao: string
+  icone: NomeIcone
+  iconeSujo: NomeIcone
+  aviso: string
+}
+
+export const HIGIENE: Record<Especie, Higiene> = {
+  gato: { acao: 'Limpar caixinha', icone: 'caixinha', iconeSujo: 'caixinhaSuja', aviso: 'Caixinha suja' },
+  coelho: { acao: 'Limpar caixinha', icone: 'caixinhaFeno', iconeSujo: 'caixinhaFenoSuja', aviso: 'Caixinha suja' },
+  capivara: { acao: 'Encher a piscininha', icone: 'piscina', iconeSujo: 'piscinaSuja', aviso: 'Piscininha suja' },
+  tartaruga: { acao: 'Trocar a água', icone: 'agua', iconeSujo: 'aguaSuja', aviso: 'Água suja' },
+}
 
 // a cara que cada status faz quando está baixo
 const CARA_QUANDO_BAIXO: Record<keyof Status, Expressao> = {
@@ -61,8 +79,9 @@ export function passarTempoFechado(status: Status, segundos: number) {
   }
 }
 
-// luz apagada: a energia sobe devagar (cheia em ~1 hora) e as outras barras param de cair
-const SONO_POR_SEGUNDO = 100 / 3600
+// luz apagada: a energia sobe (cheia em ~10 minutos) e as outras barras param de cair.
+// Era 1 hora, mas quem jogou achou que demorava demais (a irmã e uma colega da Bella)
+const SONO_POR_SEGUNDO = 100 / (10 * 60)
 
 export function dormirUmPouco(status: Status, segundos: number) {
   status.energia = Math.min(100, status.energia + SONO_POR_SEGUNDO * segundos)
@@ -116,9 +135,11 @@ export function expressaoDo(status: Status): Expressao {
   return status[pior] < LIMITE_BAIXO ? CARA_QUANDO_BAIXO[pior] : 'feliz'
 }
 
-export function avisoDo(status: Status): string {
+// o aviso da higiene muda com o bicho ("Piscininha suja" pra capivara...)
+export function avisoDo(status: Status, especie: Especie = 'gato'): string {
   const pior = piorStatus(status)
-  return status[pior] < LIMITE_BAIXO ? AVISO_QUANDO_BAIXO[pior] : 'Tudo bem'
+  if (status[pior] >= LIMITE_BAIXO) return 'Tudo bem'
+  return pior === 'higiene' ? HIGIENE[especie].aviso : AVISO_QUANDO_BAIXO[pior]
 }
 
 // ============ como o bicho aparece na lista ============
@@ -136,6 +157,6 @@ export function comoNaLista(bicho: Bicho): NaLista {
   if (!bicho.chocou) return { ovo: true, dormindo: false, expressao: 'neutro', aviso: 'Ovo · quase chocando', alerta: false }
   if (bicho.luzApagada) return { ovo: false, dormindo: true, expressao: 'dormindo', aviso: 'Dormindo', alerta: false }
   if (bicho.doente) return { ovo: false, dormindo: false, expressao: 'doente', aviso: 'Doente!', alerta: true }
-  const aviso = avisoDo(bicho.status)
+  const aviso = avisoDo(bicho.status, bicho.especie)
   return { ovo: false, dormindo: false, expressao: expressaoDo(bicho.status), aviso, alerta: aviso !== 'Tudo bem' }
 }
